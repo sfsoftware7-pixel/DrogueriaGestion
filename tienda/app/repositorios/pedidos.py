@@ -4,6 +4,7 @@ Las funciones que escriben reciben el cursor de una transacción abierta (db.tra
 sus productos, los lotes despachados, el kárdex y el historial se guarden todos o ninguno.
 """
 from ..db import consultar
+from flask import current_app
 from .catalogo import _MEJOR_PROMOCION
 
 # Marca de contraseña de un cliente que compró como invitado: no es un hash Argon2 válido, así que esa
@@ -15,13 +16,25 @@ def _marcadores(valores):
     return ', '.join(['%s'] * len(valores))
 
 
+def _bd_gestion():
+    """El nombre de esquema solo puede venir de configuración validada al iniciar Flask."""
+    import re
+    nombre = current_app.config.get('DB_GESTION_NAME', 'drogueria_gestion')
+    if not re.fullmatch(r'[A-Za-z0-9_]+', nombre):
+        raise RuntimeError('DB_GESTION_NAME no es válido')
+    return f'`{nombre}`'
+
+
 # ---------------------------------------------------------------- lectura previa (sin bloqueo)
 def precios_vigentes(cur, ids):
-    """Precio de lista y descuento por unidad de la mejor promoción vigente (la misma regla del catálogo)."""
+    """Precio vigente solo para productos vinculados a un medicamento por SKU=código exacto."""
+    bd = _bd_gestion()
     cur.execute(
         f"""SELECT p.id_producto, p.nombre, p.presentacion, p.precio, p.requiere_formula, p.activo,
+                   m.id_medicamento,
                    COALESCE(mp.descuento, 0) AS descuento
               FROM productos p
+              JOIN {bd}.medicamentos m ON m.codigo = p.sku AND m.activo = 1
               LEFT JOIN ({_MEJOR_PROMOCION}) mp ON mp.id_producto = p.id_producto
              WHERE p.id_producto IN ({_marcadores(ids)})""",
         tuple(ids),
@@ -62,21 +75,23 @@ def usuarios_con_datos(cur, email, tipo_documento, numero_documento):
 
 # ---------------------------------------------------------------- existencias (con bloqueo)
 def bloquear_existencias(cur, id_sede, ids):
-    """Lotes sin vencer de la sede con unidades, en orden FEFO (primero el que vence antes).
+    """Lotes vigentes del inventario administrativo compartido, bloqueados en orden FEFO.
 
-    FOR UPDATE OF i bloquea solo las filas de inventario hasta el final de la transacción: dos compras
-    simultáneas del mismo producto no pueden vender la misma unidad. El orden fijo (producto, vencimiento,
-    lote) evita bloqueos cruzados entre pedidos.
+    Todas las sedes de la tienda consumen esta bolsa de stock porque gestión todavía no separa lotes por sede.
+    Ambas bases deben estar en el mismo servidor MySQL para que el bloqueo abarque la transacción del pedido.
     """
+    bd = _bd_gestion()
     cur.execute(
-        f"""SELECT i.id_inventario, i.id_lote, i.cantidad, lo.id_producto
-              FROM inventario i
-              JOIN lotes lo ON lo.id_lote = i.id_lote
-             WHERE i.id_sede = %s AND lo.id_producto IN ({_marcadores(ids)})
-               AND lo.fecha_vencimiento >= CURDATE() AND i.cantidad > 0
-             ORDER BY lo.id_producto, lo.fecha_vencimiento, lo.id_lote
-             FOR UPDATE OF i""",
-        (id_sede, *ids),
+        f"""SELECT p.id_producto, lo.id_lote, lo.id_medicamento, lo.cantidad_actual AS cantidad,
+                   lo.fecha_vencimiento
+              FROM productos p
+              JOIN {bd}.medicamentos m ON m.codigo = p.sku AND m.activo = 1
+              JOIN {bd}.lotes lo ON lo.id_medicamento = m.id_medicamento
+             WHERE p.id_producto IN ({_marcadores(ids)})
+               AND lo.fecha_vencimiento >= CURDATE() AND lo.cantidad_actual > 0
+             ORDER BY p.id_producto, lo.fecha_vencimiento, lo.id_lote
+             FOR UPDATE OF lo""",
+        tuple(ids),
     )
     return cur.fetchall()
 
@@ -138,15 +153,26 @@ def insertar_item(cur, id_pedido, item, id_formula):
 
 
 def descontar_lote(cur, id_pedido, id_pedido_item, asignacion, motivo):
-    """Saca unidades de un lote: ítem-lote (trazabilidad), inventario y movimiento VENTA del kárdex."""
-    cur.execute('INSERT INTO pedido_item_lotes (id_pedido_item, id_lote, cantidad) VALUES (%s, %s, %s)',
-                (id_pedido_item, asignacion['id_lote'], asignacion['cantidad']))
-    cur.execute('UPDATE inventario SET cantidad = cantidad - %s WHERE id_inventario = %s',
-                (asignacion['cantidad'], asignacion['id_inventario']))
+    """Descuenta el lote fuente de gestión y conserva el enlace de trazabilidad en el pedido web."""
+    bd = _bd_gestion()
     cur.execute(
-        """INSERT INTO movimientos_inventario (id_inventario, id_pedido, tipo, cantidad, saldo, motivo)
-           VALUES (%s, %s, 'VENTA', %s, %s, %s)""",
-        (asignacion['id_inventario'], id_pedido, asignacion['cantidad'], asignacion['saldo'], motivo),
+        f"""UPDATE {bd}.lotes SET cantidad_actual = cantidad_actual - %s
+             WHERE id_lote = %s AND cantidad_actual >= %s""",
+        (asignacion['cantidad'], asignacion['id_lote'], asignacion['cantidad']),
+    )
+    if cur.rowcount != 1:
+        raise RuntimeError('El lote administrativo cambió durante el pedido')
+    cur.execute(
+        """INSERT INTO pedido_item_lotes_gestion (id_pedido_item, id_lote_gestion, cantidad)
+           VALUES (%s, %s, %s)""",
+        (id_pedido_item, asignacion['id_lote'], asignacion['cantidad']),
+    )
+    cur.execute(
+        f"""INSERT INTO {bd}.movimientos_inventario
+               (id_lote, id_medicamento, tipo, cantidad, saldo_lote, motivo, fecha)
+           VALUES (%s, %s, 'VENTA', %s, %s, %s, NOW())""",
+        (asignacion['id_lote'], asignacion['id_medicamento'], asignacion['cantidad'],
+         asignacion['saldo'], motivo),
     )
 
 

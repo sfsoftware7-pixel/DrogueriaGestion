@@ -76,8 +76,8 @@ El resultado esperado es `42`.
 
 ### 2. Crear el usuario de la aplicación
 
-La tienda lee todo el catálogo y solo escribe lo que crea una compra. Cambie `ClaveSegura` por una contraseña
-propia:
+La tienda lee el catálogo de `drogueria_db` y consulta/descuenta existencias en `drogueria_gestion` del mismo
+servidor MySQL. Cambie `ClaveSegura` por una contraseña propia:
 
 ```sql
 CREATE USER 'tienda_app'@'localhost' IDENTIFIED BY 'ClaveSegura';
@@ -89,11 +89,12 @@ GRANT INSERT ON drogueria_db.direcciones TO 'tienda_app'@'localhost', 'tienda_ap
 GRANT INSERT ON drogueria_db.formulas_medicas TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
 GRANT INSERT, UPDATE (codigo) ON drogueria_db.pedidos TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
 GRANT INSERT ON drogueria_db.pedido_items TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
-GRANT INSERT ON drogueria_db.pedido_item_lotes TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
+GRANT INSERT ON drogueria_db.pedido_item_lotes_gestion TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
 GRANT INSERT ON drogueria_db.pedido_historial TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
--- Descontar existencias (FEFO) y dejar el movimiento en el kárdex
-GRANT UPDATE ON drogueria_db.inventario TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
-GRANT INSERT ON drogueria_db.movimientos_inventario TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
+-- Integración con el inventario del panel administrativo
+GRANT SELECT ON drogueria_gestion.medicamentos TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
+GRANT SELECT, UPDATE ON drogueria_gestion.lotes TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
+GRANT INSERT ON drogueria_gestion.movimientos_inventario TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
 ```
 
 Sin los permisos de escritura, todo funciona salvo confirmar un pedido.
@@ -115,6 +116,7 @@ Después edite `tienda/.env` y complete estas variables:
 | `SECRET_KEY` | Una cadena aleatoria: `python -c "import secrets; print(secrets.token_hex(32))"` |
 | `DB_HOST` / `DB_PORT` | Dirección y puerto de MySQL (por defecto `127.0.0.1` y `3306`) |
 | `DB_NAME` | `drogueria_db` |
+| `DB_GESTION_NAME` | `drogueria_gestion`, la base que usa el panel administrativo en el mismo servidor MySQL |
 | `DB_USER` / `DB_PASSWORD` | El usuario del paso 2 |
 
 El archivo `.env` está en `.gitignore`: las credenciales nunca se suben al repositorio.
@@ -168,6 +170,20 @@ Respuestas de error:
 - POST sin la cabecera `X-Requested-With: tienda` (la pone `api.js`): **403**, como protección contra envíos
   desde otros sitios.
 - Base de datos no disponible: **503**, con un mensaje genérico.
+
+### Sincronización con el inventario administrativo
+
+La tienda conserva su catálogo y sus pedidos en `drogueria_db`; las existencias vendibles se consultan y descuentan
+directamente de `drogueria_gestion.lotes`. El cruce es exacto: `productos.sku` debe ser igual a
+`medicamentos.codigo`. Los productos sin coincidencia no se pueden comprar y muestran stock cero. La tienda guarda
+el ID del lote administrativo en `pedido_item_lotes_gestion` y registra un movimiento `VENTA` en el kárdex del
+panel. La misma transacción cubre ambas bases, por lo que deben estar en el mismo servidor MySQL.
+
+En una tienda ya instalada, ejecute una vez `database/migrations/tienda/001_trazabilidad_lotes_gestion.sql` sobre
+`drogueria_db`. Después vincule cada SKU con el código del medicamento correspondiente (no use un código de otro
+producto). Configure `DB_GESTION_NAME` en `tienda/.env` y conceda al usuario de tienda los permisos indicados
+arriba. Gestión maneja un inventario global, sin cantidades por sede; por eso los pedidos de todas las sedes de la
+tienda comparten el mismo stock administrativo.
 
 ### Cómo se guarda un pedido
 

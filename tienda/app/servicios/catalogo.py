@@ -9,21 +9,49 @@ from ..repositorios import catalogo as repo
 _PALABRA = re.compile(r'\w+')
 MIN_TOKEN_FULLTEXT = 3  # innodb_ft_min_token_size por defecto
 
+# Fotografías reales con licencia Unsplash. Se asignan por categoría y rotan para variar las tarjetas;
+# si el catálogo tiene una imagen_url propia, esa URL siempre tiene prioridad.
+FOTOS_CATEGORIA = {
+    1: ('medicamentos-frascos.jpg', 'medicamentos-mesa.jpg', 'farmacia-estante.jpg'),
+    2: ('medicamentos-mesa.jpg', 'medicamentos-frascos.jpg', 'farmacia-estante.jpg'),
+    3: ('medicamentos-frascos.jpg', 'vitamina-botella.jpg', 'medicamentos-mesa.jpg'),
+    4: ('medicamentos-mesa.jpg', 'medicamentos-frascos.jpg', 'farmacia-estante.jpg'),
+    5: ('vitamina-botella.jpg', 'medicamentos-frascos.jpg', 'medicamentos-mesa.jpg'),
+    6: ('medicamentos-frascos.jpg', 'medicamentos-mesa.jpg', 'farmacia-estante.jpg'),
+    7: ('vitaminas.jpg', 'vitamina-botella.jpg'),
+    8: ('cuidado-piel.jpg', 'limpiador-facial.jpg'),
+    9: ('panitos-bebe.jpg', 'cuidado-bebe.jpg'),
+    10: ('termometro.jpg', 'photo-f65717909-500.jpg'),
+    11: ('protector-solar.jpg',),
+    12: ('vitaminas.jpg', 'vitamina-botella.jpg'),
+}
+
 
 def _pesos(valor):
     """DECIMAL de MySQL -> entero en pesos colombianos (los precios no llevan centavos)."""
     return int(Decimal(valor).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
 
+def _imagen_producto(fila):
+    propia = fila.get('imagen_url')
+    if propia:
+        return propia
+    fotos = FOTOS_CATEGORIA.get(fila['id_categoria'], FOTOS_CATEGORIA[1])
+    nombre = fotos[fila['id_producto'] % len(fotos)]
+    return f'/static/img/productos/{nombre}' if nombre != 'photo-f65717909-500.jpg' else f'/static/img/fotos/{nombre}'
+
+
 def _producto(fila):
+    id_producto = fila['id_producto']
     precio = _pesos(fila['precio'])
     descuento = _pesos(fila['descuento'])
     tiene_oferta = 0 < descuento < precio
     return {
-        'id': fila['id_producto'],
+        'id': id_producto,
         'nombre': fila['nombre'],
         'slug': fila['slug'],
         'presentacion': fila['presentacion'],
+        'imagen_url': _imagen_producto(fila),
         'categoria': fila['categoria'],
         'laboratorio': fila['laboratorio'],
         'requiere_formula': bool(fila['requiere_formula']),

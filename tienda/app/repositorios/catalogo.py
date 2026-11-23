@@ -1,4 +1,8 @@
 """Consultas SQL del catálogo. Todas usan parámetros %s: ningún dato del usuario se concatena al SQL."""
+import re
+
+from flask import current_app
+
 from ..db import consultar
 
 # Expresión del descuento por unidad de una promoción (pesos colombianos, sin decimales)
@@ -21,20 +25,26 @@ _MEJOR_PROMOCION = f"""
     ) candidatas
     WHERE puesto = 1"""
 
-# Existencias vendibles: lotes sin vencer de las sedes activas (la misma regla que aplica el pedido)
-STOCK_PRODUCTO = """COALESCE((
-        SELECT SUM(i.cantidad)
-          FROM inventario i
-          JOIN lotes lo ON lo.id_lote = i.id_lote
-          JOIN sedes s  ON s.id_sede = i.id_sede
-         WHERE lo.id_producto = p.id_producto AND lo.fecha_vencimiento >= CURDATE() AND s.activo = 1
-    ), 0)"""
+def _bd_gestion():
+    nombre = current_app.config.get('DB_GESTION_NAME', 'drogueria_gestion')
+    if not re.fullmatch(r'[A-Za-z0-9_]+', nombre):
+        raise RuntimeError('DB_GESTION_NAME no es válido')
+    return f'`{nombre}`'
 
-_COLUMNAS_PRODUCTO = f"""
-    p.id_producto, p.nombre, p.slug, p.presentacion, p.precio, p.requiere_formula,
+
+def _columnas_producto():
+    """El stock visible viene de los lotes de gestión y se cruza por SKU=código exacto."""
+    bd = _bd_gestion()
+    stock = f"""COALESCE((
+        SELECT SUM(lo.cantidad_actual)
+          FROM {bd}.medicamentos m
+          JOIN {bd}.lotes lo ON lo.id_medicamento = m.id_medicamento
+         WHERE m.codigo = p.sku AND m.activo = 1 AND lo.fecha_vencimiento >= CURDATE()
+    ), 0)"""
+    return f"""p.id_producto, p.id_categoria, p.nombre, p.slug, p.presentacion, p.imagen_url, p.precio, p.requiere_formula,
     c.nombre AS categoria, l.nombre AS laboratorio,
     COALESCE(mp.descuento, 0) AS descuento, mp.promocion,
-    {STOCK_PRODUCTO} AS stock"""
+    {stock} AS stock"""
 
 _FROM_PRODUCTO = f"""
       FROM productos p
@@ -75,7 +85,7 @@ def categoria_por_slug(slug):
 def productos_de_categoria(id_categoria):
     """Productos activos de la categoría y de sus subcategorías: primero los que tienen existencias."""
     return consultar(
-        f"""SELECT {_COLUMNAS_PRODUCTO}
+        f"""SELECT {_columnas_producto()}
             {_FROM_PRODUCTO}
             WHERE p.activo = 1 AND (c.id_categoria = %s OR c.id_categoria_padre = %s)
             ORDER BY stock = 0, p.nombre""",
@@ -86,7 +96,7 @@ def productos_de_categoria(id_categoria):
 def productos_destacados(limite):
     """Productos marcados como destacados o con una promoción vigente."""
     return consultar(
-        f"""SELECT {_COLUMNAS_PRODUCTO}
+        f"""SELECT {_columnas_producto()}
             {_FROM_PRODUCTO}
             WHERE p.activo = 1 AND (p.destacado = 1 OR mp.id_producto IS NOT NULL)
             ORDER BY p.destacado DESC, descuento DESC, p.nombre
@@ -98,7 +108,7 @@ def productos_destacados(limite):
 def productos_en_promocion(limite):
     """Solo productos con una promoción vigente, del mayor al menor descuento relativo."""
     return consultar(
-        f"""SELECT {_COLUMNAS_PRODUCTO}
+        f"""SELECT {_columnas_producto()}
             {_FROM_PRODUCTO}
             WHERE p.activo = 1 AND mp.id_producto IS NOT NULL
             ORDER BY mp.descuento / p.precio DESC, p.nombre
@@ -132,7 +142,7 @@ def buscar_productos(termino_fulltext, prefijo_like, contiene_like, limite):
     params.append(contiene_like)
 
     return consultar(
-        f"""SELECT {_COLUMNAS_PRODUCTO}
+        f"""SELECT {_columnas_producto()}
             {_FROM_PRODUCTO}
             JOIN (SELECT id_producto, MAX(puntaje) AS puntaje
                     FROM ({' UNION ALL '.join(ramas)}) coincidencias
@@ -148,7 +158,7 @@ def productos_por_ids(ids):
     """Productos activos con su precio vigente y existencias (página del carrito y chatbot)."""
     marcadores = ', '.join(['%s'] * len(ids))
     return consultar(
-        f"""SELECT {_COLUMNAS_PRODUCTO}
+        f"""SELECT {_columnas_producto()}
             {_FROM_PRODUCTO}
             WHERE p.activo = 1 AND p.id_producto IN ({marcadores})
             ORDER BY p.nombre""",
@@ -157,15 +167,19 @@ def productos_por_ids(ids):
 
 
 def stock_por_sede(ids):
-    """Existencias vendibles de cada producto en cada sede activa (las sedes sin unidades no aparecen)."""
+    """Stock global de gestión; por ahora se comparte entre las sedes de la tienda."""
     marcadores = ', '.join(['%s'] * len(ids))
+    bd = _bd_gestion()
     return consultar(
-        f"""SELECT lo.id_producto, i.id_sede, SUM(i.cantidad) AS stock
-              FROM inventario i
-              JOIN lotes lo ON lo.id_lote = i.id_lote
-              JOIN sedes s  ON s.id_sede = i.id_sede
-             WHERE lo.id_producto IN ({marcadores}) AND lo.fecha_vencimiento >= CURDATE() AND s.activo = 1
-             GROUP BY lo.id_producto, i.id_sede""",
+        f"""SELECT p.id_producto, s.id_sede, COALESCE(SUM(lo.cantidad_actual), 0) AS stock
+              FROM productos p
+              JOIN sedes s ON s.activo = 1
+              LEFT JOIN {bd}.medicamentos m
+                     ON m.codigo = p.sku AND m.activo = 1
+              LEFT JOIN {bd}.lotes lo
+                     ON lo.id_medicamento = m.id_medicamento AND lo.fecha_vencimiento >= CURDATE()
+             WHERE p.id_producto IN ({marcadores})
+             GROUP BY p.id_producto, s.id_sede""",
         tuple(ids),
     )
 

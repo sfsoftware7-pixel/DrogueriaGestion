@@ -181,7 +181,7 @@ def _asignar_fefo(lotes, cantidad):
         if faltan == 0:
             break
         tomar = min(lote['cantidad'], faltan)
-        asignaciones.append({'id_inventario': lote['id_inventario'], 'id_lote': lote['id_lote'],
+        asignaciones.append({'id_medicamento': lote['id_medicamento'], 'id_lote': lote['id_lote'],
                              'cantidad': tomar, 'saldo': lote['cantidad'] - tomar})
         faltan -= tomar
     return asignaciones if faltan == 0 else None
