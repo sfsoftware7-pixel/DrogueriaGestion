@@ -169,7 +169,7 @@ def _usuario(cur, cliente):
              and f['numero_documento'] == cliente['numero_documento'] and f['password_hash'] == repo.HASH_INVITADO]
     if len(filas) == 1 and mismo:
         return mismo[0]['id_usuario']
-    # Sin inicio de sesión no se puede comprar a nombre de una cuenta ajena: no se dice cuál dato coincide
+    # Sin la sesión iniciada no se puede comprar a nombre de una cuenta registrada: no se dice cuál dato coincide
     raise ErrorPedido('Ese correo o documento ya está registrado con otros datos. Revisa lo que escribiste o escríbenos.',
                       {'email': 'Revisa el correo.', 'numero_documento': 'Revisa el documento.'}, estado=409)
 
@@ -187,8 +187,12 @@ def _asignar_fefo(lotes, cantidad):
     return asignaciones if faltan == 0 else None
 
 
-def crear(pedido):
-    """Guarda el pedido completo en una transacción y devuelve su código (PED-000123)."""
+def crear(pedido, id_usuario_sesion=None):
+    """Guarda el pedido completo en una transacción y devuelve su código (PED-000123).
+
+    Con la sesión iniciada (id_usuario_sesion) el pedido queda a nombre de esa cuenta y aparece en Mi cuenta;
+    sin sesión se crea o reutiliza el cliente invitado.
+    """
     ids = sorted(pedido['items'])
     entrega = pedido['entrega']
     with db.transaccion() as cur:
@@ -233,7 +237,7 @@ def crear(pedido):
         subtotal = sum(l['precio'] * l['cantidad'] for l in lineas)
         descuento = sum(l['descuento'] * l['cantidad'] for l in lineas)
 
-        id_usuario = _usuario(cur, pedido['cliente'])
+        id_usuario = id_usuario_sesion or _usuario(cur, pedido['cliente'])
         id_direccion = direccion_texto = None
         if entrega['tipo'] == 'DOMICILIO':
             id_direccion = repo.insertar_direccion(cur, id_usuario, ciudad['id_ciudad'], entrega)

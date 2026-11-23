@@ -30,10 +30,10 @@
           </div>
         </form>
 
-        <button class="nav-accion" id="boton-cuenta" type="button">
+        <a class="nav-accion" id="boton-cuenta" href="{{ url_for('pagina_cuenta') }}"{% if request.endpoint == 'pagina_cuenta' %} aria-current="page"{% endif %}>
           <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5"/></svg>
-          <span class="nav-accion__texto">Mi cuenta</span>
-        </button>
+          <span class="nav-accion__texto">{% if usuario_sesion %}Hola, {{ usuario_sesion.nombre }}<span class="solo-lectores"> (Mi cuenta)</span>{% else %}Mi cuenta{% endif %}</span>
+        </a>
 
         <a class="btn btn--secondary carrito" id="boton-carrito" href="/carrito" aria-describedby="carrito-descripcion">
           <span class="carrito__texto">Carrito</span>

@@ -1,5 +1,7 @@
-"""API REST del catálogo (solo lectura): categorías, destacados/promociones, búsqueda, productos del carrito
-y disponibilidad por sede."""
+"""API REST del catálogo (solo lectura): categorías y sus productos, destacados/promociones, búsqueda,
+productos del carrito y disponibilidad por sede."""
+import re
+
 from flask import Blueprint, jsonify, request
 
 from ..servicios import catalogo as servicio
@@ -7,6 +9,7 @@ from ..servicios import catalogo as servicio
 bp = Blueprint('api_catalogo', __name__)
 
 TIPOS_LISTADO = ('destacados', 'promocion')
+SLUG = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')  # mismo formato de categorias.slug (máximo 90)
 
 
 class ErrorValidacion(Exception):
@@ -38,6 +41,15 @@ def _error_validacion(error):
 @bp.get('/categorias')
 def categorias():
     return _respuesta(servicio.listar_categorias())
+
+
+@bp.get('/categorias/<slug>')
+def categoria(slug):
+    """Una categoría con sus productos (y los de sus subcategorías), precio vigente y existencias."""
+    detalle = servicio.detalle_categoria(slug) if len(slug) <= 90 and SLUG.match(slug) else None
+    if not detalle:
+        return jsonify({'error': 'No encontramos esa categoría.'}), 404
+    return _respuesta(detalle, segundos_cache=30)
 
 
 @bp.get('/productos/destacados')

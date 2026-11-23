@@ -59,6 +59,30 @@ def categorias_principales():
     )
 
 
+def categoria_por_slug(slug):
+    """Categoría activa por su fragmento de URL, con el nombre y el slug de su categoría padre (si tiene)."""
+    filas = consultar(
+        """SELECT c.id_categoria, c.nombre, c.slug, c.descripcion,
+                  pa.nombre AS padre_nombre, pa.slug AS padre_slug
+             FROM categorias c
+             LEFT JOIN categorias pa ON pa.id_categoria = c.id_categoria_padre AND pa.activo = 1
+            WHERE c.slug = %s AND c.activo = 1""",
+        (slug,),
+    )
+    return filas[0] if filas else None
+
+
+def productos_de_categoria(id_categoria):
+    """Productos activos de la categoría y de sus subcategorías: primero los que tienen existencias."""
+    return consultar(
+        f"""SELECT {_COLUMNAS_PRODUCTO}
+            {_FROM_PRODUCTO}
+            WHERE p.activo = 1 AND (c.id_categoria = %s OR c.id_categoria_padre = %s)
+            ORDER BY stock = 0, p.nombre""",
+        (id_categoria, id_categoria),
+    )
+
+
 def productos_destacados(limite):
     """Productos marcados como destacados o con una promoción vigente."""
     return consultar(

@@ -230,8 +230,9 @@ h3 { font-size: var(--t-nombre); line-height: var(--lh-nombre); font-weight: 500
   display: inline-flex; align-items: center; gap: var(--s-2);
   min-height: 44px; min-width: 44px; padding: 0 var(--s-2);
   background: none; border: 0; cursor: pointer;
-  font-weight: 500;
+  font-weight: 500; text-decoration: none;
 }
+.nav-accion[aria-current="page"] .nav-accion__texto { text-decoration: underline; text-underline-offset: 4px; }
 .nav-accion__texto,
 .carrito__texto {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
@@ -312,6 +313,7 @@ h3 { font-size: var(--t-nombre); line-height: var(--lh-nombre); font-weight: 500
   display: flex; align-items: center; min-height: 56px;
   font-size: var(--t-nombre); text-decoration: none;
 }
+.menu-enlace[aria-current="page"] { font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
 .menu-error { padding: var(--s-4) 0; color: var(--muted); }
 .menu-todas { display: none; }
 
@@ -366,6 +368,9 @@ h3 { font-size: var(--t-nombre); line-height: var(--lh-nombre); font-weight: 500
   }
   .menu-enlace:hover { color: var(--ink); }
   .menu-enlace:hover::after { transform: scaleX(1); transform-origin: left; transition-duration: 150ms; }
+  /* La categoría de la página actual queda subrayada (con la línea del hover, no con text-decoration) */
+  .menu-enlace[aria-current="page"] { color: var(--ink); text-decoration: none; }
+  .menu-enlace[aria-current="page"]::after { transform: scaleX(1); }
 }
 
 /* ---------------------------------------------------------------- hero (place, variante tienda: letterbox) */
@@ -445,7 +450,7 @@ h3 { font-size: var(--t-nombre); line-height: var(--lh-nombre); font-weight: 500
     grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--s-5);
     align-items: end; margin-bottom: var(--s-7);
   }
-  .cabeza h2 { grid-column: 1 / span 6; }
+  .cabeza h1, .cabeza h2 { grid-column: 1 / span 6; }
   .cabeza__lado { grid-column: 7 / -1; }
 }
 @media (max-width: 639px) { .seccion { padding-block: var(--s-6); } }
@@ -784,6 +789,42 @@ h3 { font-size: var(--t-nombre); line-height: var(--lh-nombre); font-weight: 500
 .paso--actual .paso__texto { font-weight: 500; }
 .paso__fecha { color: var(--muted); font-size: var(--t-small); line-height: 20px; }
 .seguimiento__nota { color: var(--muted); max-width: 44ch; }
+
+/* ---------------------------------------------------------------- página de categoría */
+.migas { margin-bottom: var(--s-5); font-size: var(--t-small); line-height: 20px; color: var(--muted); }
+.migas ol { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); margin: 0; padding: 0; list-style: none; }
+.migas li + li::before { content: '/'; margin-right: var(--s-2); color: var(--line-strong); }
+.migas a { text-underline-offset: 3px; }
+.migas a:hover { color: var(--ink); }
+.migas [aria-current="page"] { color: var(--ink); font-weight: 500; }
+.cabeza__nota { margin-top: var(--s-1); color: var(--muted); }
+
+/* ---------------------------------------------------------------- Mi cuenta */
+.grupo__nota { margin: calc(-1 * var(--s-2)) 0 var(--s-4); color: var(--muted); }
+.grupo__nota a { color: var(--action); font-weight: 500; }
+.cuenta__acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-5); }
+.cuenta__pedidos { min-width: 0; }
+.cuenta__pedidos .recibo__titulo { margin-bottom: var(--s-4); }
+.tabla-pedidos { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tabla-pedidos th { text-align: left; font-size: var(--t-small); font-weight: 500; background: var(--surface); padding: var(--s-2); }
+.tabla-pedidos td { padding: var(--s-3) var(--s-2); border-bottom: 1px solid var(--line); vertical-align: top; }
+.tabla-pedidos .num { text-align: right; white-space: nowrap; }
+.tabla-pedidos a { font-weight: 500; color: var(--action); }
+@media (min-width: 1024px) {
+  .cuenta__datos { grid-column: 1 / span 5; }
+  .cuenta__pedidos { grid-column: 6 / -1; }
+  /* En la columna angosta los datos van uno debajo del otro: el correo no se parte */
+  .cuenta__datos .recibo__datos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639px) {
+  /* En el teléfono cada pedido se lee como una ficha: código y fecha, estado y entrega, total */
+  .tabla-pedidos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tabla-pedidos tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-3); padding-block: var(--s-3); border-bottom: 1px solid var(--line); }
+  .tabla-pedidos td { border: 0; padding: 0; }
+  .tabla-pedidos td:first-child { grid-column: 1 / -1; }
+  .tabla-pedidos td:nth-child(3) { color: var(--muted); }
+  .tabla-pedidos td.num { grid-column: 1 / -1; text-align: left; font-weight: 500; }
+}
 
 /* ---------------------------------------------------------------- chatbot */
 .chat { position: fixed; right: var(--s-4); bottom: var(--s-4); z-index: 70; }

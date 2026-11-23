@@ -34,9 +34,14 @@ export function ajustarMenu() {
 }
 
 export function pintarMenu(categorias) {
-  // Mientras no existan los listados por categoría, el enlace lleva a la lista del inicio (y el clic avisa)
-  $('#menu-lista').replaceChildren(...categorias.map((c) => el('li', {},
-    el('a', { clase: 'menu-enlace', href: '/#categorias', 'data-categoria': c.nombre, texto: c.nombre }))));
+  // Cada enlace abre la página de la categoría; la de la página actual queda marcada (aria-current)
+  $('#menu-lista').replaceChildren(...categorias.map((c) => {
+    const ruta = `/categoria/${encodeURIComponent(c.slug)}`;
+    return el('li', {}, el('a', {
+      clase: 'menu-enlace', href: ruta, texto: c.nombre,
+      'aria-current': window.location.pathname === ruta ? 'page' : null,
+    }));
+  }));
   ajustarMenu();
 }
 
@@ -222,17 +227,6 @@ export function iniciarEncabezado({ cargarMenu: conMenu = true } = {}) {
   escritorio.addEventListener('change', (evento) => {
     if (evento.matches) alternarMenu(false);
   });
-
-  // Los listados por categoría llegan en una fase posterior: se informa en lugar de abrir una página vacía
-  document.addEventListener('click', (evento) => {
-    const enlace = evento.target.closest('a[data-categoria]');
-    if (!enlace) return;
-    evento.preventDefault();
-    if (menu.classList.contains('abierto')) alternarMenu(false);
-    avisar(`El listado de «${enlace.dataset.categoria}» llega en la siguiente fase del proyecto.`);
-  });
-
-  $('#boton-cuenta').addEventListener('click', () => avisar('El inicio de sesión no está incluido en este prototipo.'));
 
   new ResizeObserver(ajustarMenu).observe($('#menu-lista'));
   escritorio.addEventListener('change', ajustarMenu);
