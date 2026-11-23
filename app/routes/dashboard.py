@@ -1,16 +1,69 @@
-"""API del panel principal: indicadores, alertas y tendencias.
-
-Las consultas son constantes del módulo: el endpoint ejecuta exactamente el mismo texto que muestra
-«Ver SQL» (routes/consultas.py), con los parámetros que arman las funciones params_*.
-"""
+"""API del panel principal: indicadores, alertas, tendencias y pedidos web recientes."""
 from datetime import date, timedelta
+import logging
+import re
 
-from flask import Blueprint, jsonify
+import pymysql
+from flask import Blueprint, current_app, jsonify
 
 from ..db import consultar, consultar_uno
-from ..seguridad import login_requerido, tiene_permiso
+from ..seguridad import login_requerido, permiso_requerido, tiene_permiso
 
 bp = Blueprint('dashboard', __name__)
+log = logging.getLogger(__name__)
+
+ESTADOS_PEDIDO_TIENDA = {
+    'PENDIENTE_FORMULA': 'Pendiente de fórmula',
+    'CONFIRMADO': 'Confirmado',
+    'EN_PREPARACION': 'En preparación',
+    'EN_CAMINO': 'En camino',
+    'LISTO_PARA_RETIRO': 'Listo para retirar',
+    'ENTREGADO': 'Entregado',
+    'CANCELADO': 'Cancelado',
+}
+
+
+def _pedidos_tienda():
+    """Pedidos activos y entregas de hoy desde el esquema separado de la tienda."""
+    nombre_bd = current_app.config.get('TIENDA_DB_NAME', 'drogueria_db')
+    if not re.fullmatch(r'[A-Za-z0-9_]+', nombre_bd or ''):
+        log.error('TIENDA_DB_NAME debe contener solo letras, números y guion bajo')
+        return [], False
+    tabla_pedidos = f'`{nombre_bd}`.`pedidos`'
+    tabla_usuarios = f'`{nombre_bd}`.`usuarios`'
+    tabla_items = f'`{nombre_bd}`.`pedido_items`'
+    tabla_historial = f'`{nombre_bd}`.`pedido_historial`'
+    tabla_productos = f'`{nombre_bd}`.`productos`'
+    try:
+        filas = consultar(f'''SELECT pe.codigo, pe.estado, pe.tipo_entrega,
+                    COALESCE(MAX(CASE WHEN ph.estado = pe.estado THEN ph.created_at END), pe.created_at)
+                        AS actualizado_en,
+                    CONCAT_WS(' ', u.nombres, u.apellidos) AS cliente,
+                    items.productos
+               FROM {tabla_pedidos} pe
+               JOIN {tabla_usuarios} u ON u.id_usuario = pe.id_usuario
+               JOIN (SELECT pi.id_pedido,
+                            GROUP_CONCAT(CONCAT(pr.nombre, ' × ', pi.cantidad)
+                                         ORDER BY pr.nombre SEPARATOR ', ') AS productos
+                       FROM {tabla_items} pi
+                       JOIN {tabla_productos} pr ON pr.id_producto = pi.id_producto
+                      GROUP BY pi.id_pedido) items ON items.id_pedido = pe.id_pedido
+               LEFT JOIN {tabla_historial} ph ON ph.id_pedido = pe.id_pedido
+              WHERE pe.estado <> 'CANCELADO'
+              GROUP BY pe.id_pedido, pe.codigo, pe.estado, pe.tipo_entrega, pe.created_at,
+                       u.nombres, u.apellidos, items.productos
+              HAVING pe.estado <> 'ENTREGADO' OR actualizado_en >= CURDATE()
+              ORDER BY (pe.estado = 'ENTREGADO') ASC, actualizado_en DESC
+              LIMIT 12''')
+    except pymysql.err.MySQLError:
+        log.warning('No se pudieron leer los pedidos de la tienda; revise el esquema y el permiso SELECT',
+                    exc_info=True)
+        return [], False
+    for fila in filas:
+        fila['estado_texto'] = ESTADOS_PEDIDO_TIENDA.get(fila['estado'], fila['estado'])
+        fila['tipo_entrega_texto'] = 'Domicilio' if fila['tipo_entrega'] == 'DOMICILIO' else 'Retiro en sede'
+        fila['updated_at'] = fila.pop('actualizado_en')
+    return filas, True
 
 # Parámetros: (inicio_mes, inicio_mes, inicio_mes) — ver params_indicadores()
 SQL_INDICADORES_VENTAS = '''SELECT
@@ -112,3 +165,10 @@ def resumen():
         'alertas_vencimiento': alertas_vencimiento,
         'ultimas_ventas': ultimas,
     })
+
+
+@bp.get('/dashboard/pedidos-tienda')
+@permiso_requerido('ventas.ver')
+def pedidos_tienda():
+    pedidos, disponible = _pedidos_tienda()
+    return jsonify({'pedidos': pedidos, 'disponible': disponible})

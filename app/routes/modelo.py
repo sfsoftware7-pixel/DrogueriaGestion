@@ -18,8 +18,8 @@ bp = Blueprint('modelo', __name__)
 AREAS = (
     ('Seguridad', ('roles', 'usuarios', 'configuracion', 'consecutivos', 'auditoria')),
     ('Catálogo', ('categorias', 'proveedores', 'medicamentos', 'historial_precios', 'clientes')),
-    ('Inventario', ('entradas', 'lotes', 'detalle_entrada', 'movimientos_inventario')),
-    ('Ventas', ('ventas', 'detalle_venta')),
+    ('Inventario', ('entradas', 'lotes', 'stock', 'detalle_entrada', 'movimientos_inventario')),
+    ('Ventas', ('ventas', 'historial_facturas', 'detalle_venta')),
 )
 NOMBRE_SEGURO = re.compile(r'^[A-Za-z0-9_$]+$')
 

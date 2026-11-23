@@ -79,6 +79,15 @@ def crear_usuario_aplicacion(conn, usuario, password, nombre_bd):
             cur.execute(f'CREATE USER IF NOT EXISTS {cuenta} IDENTIFIED BY %s', (password,))
             cur.execute(f'ALTER USER {cuenta} IDENTIFIED BY %s', (password,))
             cur.execute(f'GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON `{nombre_bd}`.* TO {cuenta}')
+            # Si la tienda ya existe, el panel necesita leer pedidos para mostrarlos en el dashboard.
+            nombre_tienda = os.getenv('TIENDA_DB_NAME', 'drogueria_db')
+            if IDENTIFICADOR.fullmatch(nombre_tienda) and nombre_tienda != nombre_bd:
+                cur.execute('SELECT 1 FROM information_schema.schemata WHERE schema_name = %s', (nombre_tienda,))
+                if cur.fetchone():
+                    for tabla in ('pedidos', 'pedido_items', 'pedido_historial', 'productos', 'usuarios', 'sedes'):
+                        cur.execute(f'GRANT SELECT ON `{nombre_tienda}`.`{tabla}` TO {cuenta}')
+                    cur.execute(f'GRANT UPDATE (estado) ON `{nombre_tienda}`.`pedidos` TO {cuenta}')
+                    cur.execute(f'GRANT INSERT ON `{nombre_tienda}`.`pedido_historial` TO {cuenta}')
 
 
 # ---------------------------------------------------------------------------

@@ -4,8 +4,10 @@ Solo se aceptan claves de la lista blanca CONSULTAS. Cada entrada apunta a la MI
 parámetros que usa su endpoint; del cliente solo llegan la clave y el rango de fechas (validado). Nunca se
 ejecuta SQL escrito por el usuario.
 """
+import re
+
 import pymysql
-from flask import Blueprint, jsonify
+from flask import Blueprint, current_app, jsonify
 
 from ..db import get_db
 from ..seguridad import permiso_requerido
@@ -34,6 +36,10 @@ CONSULTAS = {
                         reportes.SQL_VENTAS_DIARIO, 'reportes.SQL_VENTAS_DIARIO', _rango),
     'reportes.totales': ('Reportes', 'Totales del periodo', 'Total vendido, IVA, descuentos y ticket promedio.',
                          reportes.SQL_VENTAS_TOTALES, 'reportes.SQL_VENTAS_TOTALES', _rango),
+    'reportes.costo': ('Reportes', 'Costo y utilidad bruta', 'Costo de los lotes vendidos y unidades del periodo.',
+                        reportes.SQL_COSTO_VENTAS, 'reportes.SQL_COSTO_VENTAS', _rango),
+    'reportes.anuladas': ('Reportes', 'Ventas anuladas', 'Cantidad y valor de ventas anuladas en el periodo.',
+                          reportes.SQL_VENTAS_ANULADAS, 'reportes.SQL_VENTAS_ANULADAS', _rango),
     'reportes.por_metodo': ('Reportes', 'Métodos de pago', 'Ventas agrupadas por método de pago.',
                             reportes.SQL_VENTAS_POR_METODO, 'reportes.SQL_VENTAS_POR_METODO', _rango),
     'reportes.por_categoria': ('Reportes', 'Ventas por categoría', 'Unidades y total vendido por categoría.',
@@ -52,6 +58,12 @@ CONSULTAS = {
                         dashboard.SQL_TENDENCIA, 'dashboard.SQL_TENDENCIA', dashboard.params_tendencia),
     'panel.top': ('Panel principal', 'Más vendidos (30 días)', 'Cinco medicamentos con más unidades en 30 días.',
                   dashboard.SQL_TOP_30_DIAS, 'dashboard.SQL_TOP_30_DIAS', _sin_parametros),
+    'panel.ultimas_ventas': ('Panel principal', 'Últimas ventas', 'Las seis ventas más recientes que aparecen en el panel.',
+                             dashboard.SQL_ULTIMAS_VENTAS, 'dashboard.SQL_ULTIMAS_VENTAS', _sin_parametros),
+    'panel.inventario': ('Panel principal', 'Resumen de inventario', 'Conteo de productos activos, agotados y con stock bajo.',
+                         dashboard.SQL_RESUMEN_INVENTARIO, 'dashboard.SQL_RESUMEN_INVENTARIO', _sin_parametros),
+    'panel.vencimientos': ('Panel principal', 'Resumen de vencimientos', 'Conteo de lotes vencidos, críticos y próximos.',
+                           dashboard.SQL_RESUMEN_VENCIMIENTOS, 'dashboard.SQL_RESUMEN_VENCIMIENTOS', _sin_parametros),
     'panel.alertas_stock': ('Panel principal', 'Alertas de inventario', 'Lee la vista v_stock_medicamentos.',
                             dashboard.SQL_ALERTAS_STOCK, 'dashboard.SQL_ALERTAS_STOCK', _sin_parametros),
     'panel.alertas_vencimiento': ('Panel principal', 'Próximos vencimientos', 'Lee la vista v_lotes_vencimiento.',
@@ -145,3 +157,19 @@ def detalle(clave):
         raise
     respuesta.update(explain=filas, plan=plan, analisis=_analizar(filas))
     return jsonify(respuesta)
+
+
+@bp.get('/consultas/<clave>/workbench')
+@permiso_requerido('consultas.ver')
+def workbench(clave):
+    """Devuelve la consulta permitida con parámetros reales para pegar en MySQL Workbench."""
+    if clave not in CONSULTAS:
+        raise ApiError('La consulta solicitada no está en la lista permitida', 404)
+    nombre_bd = current_app.config.get('DB_NAME', 'drogueria_gestion')
+    if not re.fullmatch(r'[A-Za-z0-9_]+', nombre_bd or ''):
+        raise ApiError('El nombre configurado de la base de datos no es válido', 500)
+    _, titulo, _, sql, _, armar_parametros = CONSULTAS[clave]
+    params = armar_parametros()
+    with get_db().cursor() as cur:
+        consulta = cur.mogrify(sql, params) if params else sql
+    return jsonify({'titulo': titulo, 'sql': f'USE `{nombre_bd}`;\n\n{consulta};'})

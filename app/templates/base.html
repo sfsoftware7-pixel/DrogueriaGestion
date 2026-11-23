@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
 </head>
-<body data-permisos="{{ permisos_usuario | join(',') }}" data-rol="{{ usuario_actual.rol if usuario_actual }}">
+<body data-permisos="{{ permisos_usuario | join(',') }}" data-rol="{{ usuario_actual.rol if usuario_actual }}" data-usuario-id="{{ usuario_actual.id_usuario if usuario_actual }}">
 {% include '_iconos.html' %}
 <div class="app">
   <aside class="sidebar" id="sidebar" aria-label="Menú principal">
@@ -29,6 +29,7 @@
       {% if puede('ventas.ver') or puede('clientes.ver') %}
       <div class="nav-seccion">Ventas y dispensación</div>
       {% if puede('ventas.crear') %}{{ enlace_nav('paginas.nueva_venta', 'pos', 'Nueva venta', 'carrito', pagina) }}{% endif %}
+      {% if puede('ventas.ver') %}{{ enlace_nav('paginas.pedidos_tienda', 'pedidos_tienda', 'Pedidos de tienda', 'camion', pagina) }}{% endif %}
       {% if puede('ventas.ver') %}{{ enlace_nav('paginas.ventas', 'ventas', 'Historial de ventas', 'recibo', pagina) }}{% endif %}
       {% if puede('clientes.ver') %}{{ enlace_nav('paginas.clientes', 'clientes', 'Clientes', 'usuarios', pagina) }}{% endif %}
       {% endif %}

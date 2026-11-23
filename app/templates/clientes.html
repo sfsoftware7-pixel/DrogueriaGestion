@@ -9,6 +9,7 @@
     <p>Registro de clientes con autorización de tratamiento de datos (Ley 1581 de 2012).</p>
   </div>
   <div class="encabezado-acciones">
+    <a class="btn btn-secundario" href="{{ url_for('paginas.reporte_clientes_pais') }}" target="_blank" rel="noopener">{{ icono('imprimir') }} Reporte por país</a>
     {% if puede('clientes.editar') %}
     <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nuevo cliente</button>
     {% endif %}
@@ -34,6 +35,7 @@
           <th>Documento</th>
           <th>Cliente</th>
           <th>Contacto</th>
+          <th>Ciudad / país</th>
           <th class="num">Compras</th>
           <th class="num">Total comprado</th>
           <th>Última compra</th>

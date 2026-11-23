@@ -102,6 +102,25 @@ def cambiar_estado(id_usuario):
     return jsonify({'mensaje': 'Usuario activado' if activo else 'Usuario desactivado'})
 
 
+@bp.delete('/usuarios/<int:id_usuario>')
+@permiso_requerido('usuarios.administrar')
+def eliminar(id_usuario):
+    if id_usuario == g.usuario['id_usuario']:
+        raise ApiError('No puede eliminar el usuario de la sesión actual', 409)
+    usuario = _obtener_o_404(id_usuario)
+    referencias = consultar_uno(
+        '''SELECT
+               (SELECT COUNT(*) FROM ventas WHERE id_usuario = %s) AS ventas,
+               (SELECT COUNT(*) FROM entradas WHERE id_usuario = %s) AS entradas''',
+        (id_usuario, id_usuario),
+    )
+    if referencias['ventas'] or referencias['entradas']:
+        raise ApiError('El usuario tiene operaciones vinculadas; desactívelo para conservar la trazabilidad', 409)
+    auditar('ELIMINAR', 'usuarios', f'Usuario {usuario["usuario"]}')
+    ejecutar('DELETE FROM usuarios WHERE id_usuario = %s', (id_usuario,))
+    return jsonify({'mensaje': 'Usuario eliminado'})
+
+
 @bp.post('/usuarios/<int:id_usuario>/desbloquear')
 @permiso_requerido('usuarios.administrar')
 def desbloquear(id_usuario):

@@ -84,12 +84,12 @@
 
       <aside class="seguimiento" aria-labelledby="titulo-seguimiento">
         <h2 class="seguimiento__titulo" id="titulo-seguimiento">Estado del pedido</h2>
-        <p class="seguimiento__actual">{{ pedido.estado_texto }}</p>
-        <ol class="pasos">
+        <p class="seguimiento__actual" id="estado-actual" aria-live="polite">{{ pedido.estado_texto }}</p>
+        <ol class="pasos" id="pasos-pedido">
           {% for paso in pedido.pasos %}
-          <li class="paso{% if paso.hecho %} paso--hecho{% endif %}{% if paso.actual %} paso--actual{% endif %}"{% if paso.actual %} aria-current="step"{% endif %}>
-            <span class="paso__texto">{{ paso.texto }}</span>
-            <span class="paso__fecha">{% if paso.fecha_texto %}{{ paso.fecha_texto }}{% elif not paso.hecho %}Pendiente{% endif %}</span>
+          <li class="paso{% if paso.hecho %} paso--hecho{% endif %}{% if paso.actual %} paso--actual{% endif %}" data-estado="{{ paso.estado }}"{% if paso.actual %} aria-current="step"{% endif %}>
+            <span class="paso__texto" data-paso-texto>{{ paso.texto }}</span>
+            <span class="paso__fecha" data-paso-fecha>{% if paso.fecha_texto %}{{ paso.fecha_texto }}{% elif not paso.hecho %}Pendiente{% endif %}</span>
           </li>
           {% endfor %}
         </ol>

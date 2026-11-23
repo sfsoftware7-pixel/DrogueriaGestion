@@ -27,6 +27,7 @@ PERMISOS = {
     'ventas.ver': {ADMIN, REGENTE, VENDEDOR},
     'ventas.crear': {ADMIN, REGENTE, VENDEDOR},
     'ventas.anular': {ADMIN, REGENTE},
+    'pedidos.gestionar': {ADMIN, REGENTE},
     'ventas.descuento_libre': {ADMIN, REGENTE},  # los demás roles tienen el tope 'descuento_maximo_vendedor'
     'reportes.ver': {ADMIN, REGENTE},
     'analisis_abc.ver': {ADMIN, REGENTE},   # análisis ABC (Pareto) de productos vendidos

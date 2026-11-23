@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clasificación de clientes por país · DrogueriaGestión</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    body { background: #f5f7f7; color: #172b28; font: 14px/1.5 system-ui, sans-serif; margin: 0; }
+    main { margin: 32px auto; max-width: 980px; padding: 28px; background: #fff; }
+    .acciones { display:flex; justify-content:flex-end; margin-bottom:20px; }
+    h1 { margin-bottom:4px; }
+    .grupo { margin-top:24px; break-inside:avoid; }
+    .grupo h2 { display:flex; justify-content:space-between; border-bottom:1px solid #d9e2e0; padding-bottom:8px; font-size:17px; }
+    table { border-collapse:collapse; width:100%; }
+    th, td { border-bottom:1px solid #e6ecea; padding:8px; text-align:left; }
+    th { color:#52615e; font-size:12px; }
+    @media print {
+      body { background:#fff; }
+      main { margin:0; max-width:none; padding:0; }
+      .no-imprimir { display:none !important; }
+      .grupo { break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="acciones no-imprimir"><button class="btn btn-primario" type="button" onclick="window.print()">Imprimir / guardar como PDF</button></div>
+  <h1>Clasificación de clientes por país</h1>
+  <p>Clientes registrados: <strong>{{ total }}</strong>. Los registros sin país informado aparecen en “Sin especificar”.</p>
+  {% if grupos %}
+    {% for pais, clientes in grupos.items() %}
+    <section class="grupo">
+      <h2><span>{{ pais }}</span><span>{{ clientes|length }} cliente{{ '' if clientes|length == 1 else 's' }}</span></h2>
+      <table>
+        <thead><tr><th>Documento</th><th>Cliente</th><th>Ciudad</th></tr></thead>
+        <tbody>
+          {% for cliente in clientes %}
+          <tr>
+            <td>{{ cliente.tipo_documento }} {{ cliente.numero_documento }}</td>
+            <td>{{ cliente.nombres }} {{ cliente.apellidos or '' }}</td>
+            <td>{{ cliente.ciudad or 'Sin especificar' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endfor %}
+  {% else %}
+    <p>No hay clientes para clasificar.</p>
+  {% endif %}
+</main>
+</body>
+</html>

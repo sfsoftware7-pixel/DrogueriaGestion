@@ -12,7 +12,7 @@ let datos = [];
 async function cargar(p = pagina) {
   pagina = p;
   const cuerpo = $('#tabla-cuerpo');
-  cuerpo.innerHTML = html`${filasCargando(8)}`;
+  cuerpo.innerHTML = html`${filasCargando(9)}`;
   try {
     const r = await api.get('/api/clientes', { q: $('#f-buscar').value.trim(), activo: $('#f-activo').value, pagina, por_pagina: 15 });
     datos = r.datos;
@@ -24,6 +24,7 @@ async function cargar(p = pagina) {
         <td><div class="titulo-celda">${c.nombres} ${c.apellidos || ''}</div>
           ${especial ? html`<div class="sub-celda">Cliente genérico para ventas sin identificar</div>` : ''}</td>
         <td>${c.telefono || '—'}<div class="sub-celda">${c.email || ''}</div></td>
+        <td>${c.ciudad || 'Sin ciudad'}<div class="sub-celda">${c.pais || 'Sin país registrado'}</div></td>
         <td class="num">${numero(c.compras)}</td>
         <td class="num">${moneda(c.total_comprado)}</td>
         <td>${c.ultima_compra ? fecha(c.ultima_compra) : '—'}</td>
@@ -35,19 +36,21 @@ async function cargar(p = pagina) {
           ${editar && !especial ? html`
             <button class="btn-icono" data-accion="editar" data-id="${c.id_cliente}" title="Editar">${icono('editar')}</button>
             <button class="btn-icono ${c.activo ? 'peligro' : 'exito'}" data-accion="estado" data-id="${c.id_cliente}"
-              title="${c.activo ? 'Desactivar' : 'Activar'}">${icono('encender')}</button>` : ''}
+              title="${c.activo ? 'Desactivar' : 'Activar'}">${icono('encender')}</button>
+            ${!c.ultima_compra ? html`<button class="btn-icono peligro" data-accion="eliminar" data-id="${c.id_cliente}" title="Eliminar cliente">${icono('papelera')}</button>` : ''}` : ''}
         </div></td>
       </tr>`;
-    })}` : filaVacia(8);
+    })}` : filaVacia(9);
     paginacion($('#paginacion'), r, cargar);
   } catch (e) {
-    cuerpo.innerHTML = filaVacia(8, 'No fue posible cargar', e.message);
+    cuerpo.innerHTML = filaVacia(9, 'No fue posible cargar', e.message);
   }
 }
 
 function abrir(c = null) {
   editando = c?.id_cliente ?? null;
   form.reset();
+  if (!c) $('#cl-pais').value = 'Colombia';
   $('#titulo-cliente').textContent = c ? 'Editar cliente' : 'Nuevo cliente';
   if (c) llenarFormulario(form, c);
   abrirModal('modal-cliente');
@@ -66,6 +69,9 @@ async function verDetalle(id) {
         <div><dt>Teléfono</dt><dd>${c.telefono || '—'}</dd></div>
         <div><dt>Correo</dt><dd>${c.email || '—'}</dd></div>
         <div><dt>Dirección</dt><dd>${c.direccion || '—'}</dd></div>
+        <div><dt>Ciudad</dt><dd>${c.ciudad || '—'}</dd></div>
+        <div><dt>País / nacionalidad</dt><dd>${c.pais || 'Sin especificar'}</dd></div>
+        <div><dt>Fecha de registro</dt><dd>${fechaHora(c.creado_en)}</dd></div>
         <div><dt>Fecha de nacimiento</dt><dd>${c.fecha_nacimiento ? fecha(c.fecha_nacimiento) : '—'}</dd></div>
         <div><dt>Tratamiento de datos</dt><dd>${c.autoriza_datos ? 'Autorizado' : 'No autorizado'}</dd></div>
       </dl>
@@ -90,6 +96,15 @@ $('#tabla-cuerpo').addEventListener('click', async (e) => {
   const c = datos.find((x) => x.id_cliente === Number(boton.dataset.id));
   if (boton.dataset.accion === 'ver') return verDetalle(c.id_cliente);
   if (boton.dataset.accion === 'editar') return abrir(c);
+  if (boton.dataset.accion === 'eliminar') {
+    const ok = await confirmar({ titulo: 'Eliminar cliente', mensaje: 'Esta acción es permanente. Solo se permite si el cliente no tiene facturas asociadas.', textoBoton: 'Eliminar', peligro: true });
+    if (!ok) return;
+    try {
+      toast((await api.del(`/api/clientes/${c.id_cliente}`)).mensaje);
+      cargar();
+    } catch (err) { toastError(err); }
+    return;
+  }
   if (boton.dataset.accion === 'estado') {
     if (c.activo) {
       const ok = await confirmar({ titulo: 'Desactivar cliente', mensaje: 'El cliente no aparecerá en el punto de venta. Su historial se conserva.', textoBoton: 'Desactivar', peligro: true });

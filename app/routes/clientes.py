@@ -23,6 +23,8 @@ def _validar(datos):
                             mensaje_patron='Teléfono no válido'),
         'email': v.email('email'),
         'direccion': v.texto('direccion', requerido=False, max_len=150),
+        'ciudad': v.texto('ciudad', max_len=50),
+        'pais': v.texto('pais', max_len=50),
         'fecha_nacimiento': v.fecha('fecha_nacimiento', requerido=False),
         'autoriza_datos': v.booleano('autoriza_datos'),
     }
@@ -122,3 +124,19 @@ def cambiar_estado(id_cliente):
     auditar('ACTIVAR' if activo else 'DESACTIVAR', 'clientes',
             f'Cliente {cliente["tipo_documento"]} {cliente["numero_documento"]}')
     return jsonify({'mensaje': 'Cliente activado' if activo else 'Cliente desactivado'})
+
+
+@bp.delete('/clientes/<int:id_cliente>')
+@permiso_requerido('clientes.editar')
+def eliminar(id_cliente):
+    if id_cliente == ID_CONSUMIDOR_FINAL:
+        raise ApiError('El cliente "Consumidor final" no se puede eliminar', 409)
+    cliente = consultar_uno(
+        'SELECT tipo_documento, numero_documento FROM clientes WHERE id_cliente = %s', (id_cliente,))
+    if not cliente:
+        raise ApiError('Cliente no encontrado', 404)
+    if consultar_uno('SELECT 1 FROM ventas WHERE id_cliente = %s LIMIT 1', (id_cliente,)):
+        raise ApiError('El cliente tiene facturas vinculadas; desactívelo para conservar el historial', 409)
+    auditar('ELIMINAR', 'clientes', f'Cliente {cliente["tipo_documento"]} {cliente["numero_documento"]}')
+    ejecutar('DELETE FROM clientes WHERE id_cliente = %s', (id_cliente,))
+    return jsonify({'mensaje': 'Cliente eliminado'})

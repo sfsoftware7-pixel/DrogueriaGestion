@@ -37,6 +37,7 @@ async function cargar() {
         ${u.bloqueado ? html`<button class="btn-icono exito" data-accion="desbloquear" data-id="${u.id_usuario}" title="Desbloquear">${icono('desbloquear')}</button>` : ''}
         <button class="btn-icono" data-accion="editar" data-id="${u.id_usuario}" title="Editar">${icono('editar')}</button>
         <button class="btn-icono ${u.activo ? 'peligro' : 'exito'}" data-accion="estado" data-id="${u.id_usuario}" title="${u.activo ? 'Desactivar' : 'Activar'}">${icono('encender')}</button>
+        ${u.id_usuario !== Number(document.body.dataset.usuarioId || 0) ? html`<button class="btn-icono peligro" data-accion="eliminar" data-id="${u.id_usuario}" title="Eliminar usuario">${icono('papelera')}</button>` : ''}
       </div></td>
     </tr>`)}` : filaVacia(7);
   } catch (e) {
@@ -62,6 +63,13 @@ $('#tabla-cuerpo').addEventListener('click', async (e) => {
   const u = usuarios.find((x) => x.id_usuario === Number(boton.dataset.id));
   try {
     if (boton.dataset.accion === 'editar') return abrir(u);
+    if (boton.dataset.accion === 'eliminar') {
+      if (!(await confirmar({ titulo: 'Eliminar usuario', mensaje: 'Esta acción es permanente. Usuarios con ventas o entradas deben desactivarse para conservar la trazabilidad.', textoBoton: 'Eliminar', peligro: true }))) return;
+      toast((await api.del(`/api/usuarios/${u.id_usuario}`)).mensaje);
+      cargar();
+      cargarRoles();
+      return;
+    }
     if (boton.dataset.accion === 'desbloquear') toast((await api.post(`/api/usuarios/${u.id_usuario}/desbloquear`)).mensaje);
     if (boton.dataset.accion === 'estado') {
       if (u.activo && !(await confirmar({ titulo: 'Desactivar usuario', mensaje: `${u.nombres} no podrá ingresar al sistema.`, textoBoton: 'Desactivar', peligro: true }))) return;

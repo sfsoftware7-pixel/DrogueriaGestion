@@ -97,6 +97,28 @@ GRANT SELECT, UPDATE ON drogueria_gestion.lotes TO 'tienda_app'@'localhost', 'ti
 GRANT INSERT ON drogueria_gestion.movimientos_inventario TO 'tienda_app'@'localhost', 'tienda_app'@'127.0.0.1';
 ```
 
+### Ver pedidos de la tienda en el panel administrativo
+
+El dashboard de Gestión consulta los pedidos activos y los entregados hoy cada 15 segundos. Configure
+`TIENDA_DB_NAME=drogueria_db` en el `.env` de Gestión si el esquema tiene otro nombre. El usuario `DB_USER` de
+Gestión necesita lectura de pedidos y permiso para cambiar el estado y agregar eventos al historial. Si instaló
+primero Gestión y después la tienda, ejecute una vez en MySQL (reemplace el usuario y los hosts si usa otros):
+
+```sql
+GRANT SELECT ON drogueria_db.pedidos TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT SELECT ON drogueria_db.pedido_items TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT SELECT ON drogueria_db.pedido_historial TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT SELECT ON drogueria_db.productos TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT SELECT ON drogueria_db.usuarios TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT SELECT ON drogueria_db.sedes TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT UPDATE (estado) ON drogueria_db.pedidos TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+GRANT INSERT ON drogueria_db.pedido_historial TO 'drogueria_app'@'localhost', 'drogueria_app'@'127.0.0.1';
+```
+
+Si la tienda ya existía al instalar Gestión, el instalador concede estos permisos automáticamente. En Gestión,
+Administración y Regencia pueden avanzar cada pedido. Los cambios quedan en `pedido_historial` y el seguimiento
+de la tienda muestra el nuevo estado.
+
 Sin los permisos de escritura, todo funciona salvo confirmar un pedido.
 
 ### 3. Configurar las variables de entorno

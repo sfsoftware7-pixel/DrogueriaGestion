@@ -15,3 +15,6 @@ Thumbs.db
 
 # Capturas y registros de la revisión de diseño (no los usa la aplicación)
 .taste-skill/
+
+# Los respaldos pueden contener datos personales y no se publican en Git.
+docs/entrega/backup/*.sql

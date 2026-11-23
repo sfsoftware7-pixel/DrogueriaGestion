@@ -60,6 +60,23 @@ def clientes():
     return render_template('clientes.html', pagina='clientes')
 
 
+@bp.get('/clientes/reporte-pais')
+@permiso_requerido('clientes.ver')
+def reporte_clientes_pais():
+    filas = consultar(
+        '''SELECT id_cliente, tipo_documento, numero_documento, nombres, apellidos, ciudad,
+                  COALESCE(NULLIF(TRIM(pais), ''), 'Sin especificar') AS pais
+             FROM clientes
+            WHERE id_cliente <> %s
+            ORDER BY pais, nombres, apellidos, id_cliente''',
+        (1,),
+    )
+    grupos = {}
+    for cliente in filas:
+        grupos.setdefault(cliente['pais'], []).append(cliente)
+    return render_template('clientes_reporte_pais.html', grupos=grupos, total=len(filas))
+
+
 @bp.get('/ventas/nueva')
 @permiso_requerido('ventas.crear')
 def nueva_venta():
@@ -70,6 +87,12 @@ def nueva_venta():
 @permiso_requerido('ventas.ver')
 def ventas():
     return render_template('ventas.html', pagina='ventas')
+
+
+@bp.get('/pedidos')
+@permiso_requerido('ventas.ver')
+def pedidos_tienda():
+    return render_template('pedidos_tienda.html', pagina='pedidos_tienda')
 
 
 @bp.get('/ventas/<int:id_venta>/comprobante')

@@ -128,6 +128,8 @@ CREATE TABLE clientes (
     telefono            VARCHAR(20)  NULL,
     email               VARCHAR(120) NULL,
     direccion           VARCHAR(150) NULL,
+    ciudad              VARCHAR(50)  NULL,
+    pais                VARCHAR(50)  NULL COMMENT 'País o nacionalidad para clasificación de clientes',
     fecha_nacimiento    DATE         NULL,
     autoriza_datos      TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'Autorización Ley 1581 de 2012',
     activo              TINYINT(1)   NOT NULL DEFAULT 1,
@@ -137,6 +139,7 @@ CREATE TABLE clientes (
 ) ENGINE = InnoDB COMMENT = 'Clientes de la droguería';
 
 CREATE INDEX ix_clientes_nombres ON clientes (nombres, apellidos);
+CREATE INDEX ix_clientes_pais ON clientes (pais, ciudad);
 
 -- ---------------------------------------------------------------------
 --  Inventario: entradas de mercancía, lotes y kárdex
@@ -179,6 +182,15 @@ CREATE TABLE lotes (
 
 CREATE INDEX ix_lotes_vencimiento ON lotes (fecha_vencimiento);
 CREATE INDEX ix_lotes_fefo ON lotes (id_medicamento, fecha_vencimiento, cantidad_actual);
+
+CREATE TABLE stock (
+    id_medicamento  INT UNSIGNED NOT NULL PRIMARY KEY,
+    cantidad_total  BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    actualizado_en  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_stock_medicamento FOREIGN KEY (id_medicamento) REFERENCES medicamentos (id_medicamento)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT ck_stock_cantidad CHECK (cantidad_total >= 0)
+) ENGINE = InnoDB COMMENT = 'Existencia resumida por medicamento; se sincroniza desde los lotes';
 
 CREATE TABLE detalle_entrada (
     id_detalle_entrada  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -236,6 +248,25 @@ CREATE TABLE ventas (
 
 CREATE INDEX ix_ventas_fecha ON ventas (fecha_venta);
 CREATE INDEX ix_ventas_estado_fecha ON ventas (estado, fecha_venta);
+
+CREATE TABLE historial_facturas (
+    id_historial_factura BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id_venta             INT UNSIGNED NOT NULL,
+    numero_factura       VARCHAR(20) NOT NULL,
+    fecha_venta          DATETIME NOT NULL,
+    id_cliente           INT UNSIGNED NOT NULL,
+    subtotal             DECIMAL(14,2) NOT NULL,
+    descuento            DECIMAL(14,2) NOT NULL,
+    impuesto             DECIMAL(14,2) NOT NULL,
+    total                DECIMAL(14,2) NOT NULL,
+    metodo_pago          ENUM('EFECTIVO','TARJETA_DEBITO','TARJETA_CREDITO','TRANSFERENCIA') NOT NULL,
+    fecha_registro       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_historial_factura_venta UNIQUE (id_venta),
+    CONSTRAINT uq_historial_factura_numero UNIQUE (numero_factura),
+    CONSTRAINT fk_historial_factura_venta FOREIGN KEY (id_venta) REFERENCES ventas (id_venta)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT ck_historial_factura_valores CHECK (subtotal >= 0 AND descuento >= 0 AND impuesto >= 0 AND total >= 0)
+) ENGINE = InnoDB COMMENT = 'Cabecera histórica inmutable de las facturas emitidas';
 
 CREATE TABLE detalle_venta (
     id_detalle_venta    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

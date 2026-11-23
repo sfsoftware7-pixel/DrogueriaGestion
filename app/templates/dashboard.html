@@ -77,6 +77,19 @@
     <div class="tarjeta-cuerpo" id="top-medicamentos"></div>
   </article>
 </section>
+
+<section class="tarjeta mb" aria-label="Pedidos de la tienda en línea">
+  <header class="tarjeta-cabecera">
+    <div><h2>Pedidos de la tienda en línea</h2><p id="pedidos-tienda-actualizado">Actualización automática cada 15 segundos</p></div>
+    <div class="acciones-cabecera"><span class="insignia insignia-info sin-punto" aria-live="polite">En tiempo real</span><a class="btn btn-fantasma btn-sm" href="{{ url_for('paginas.pedidos_tienda') }}">Gestionar pedidos</a></div>
+  </header>
+  <div class="tabla-contenedor">
+    <table class="tabla tabla-compacta tabla-pedidos-tienda">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>Productos</th><th>Entrega</th><th>Estado</th><th>Actualizado</th></tr></thead>
+      <tbody id="pedidos-tienda"><tr><td colspan="6">Cargando pedidos…</td></tr></tbody>
+    </table>
+  </div>
+</section>
 {% endif %}
 
 <section class="rejilla {{ 'rejilla-3' if ver_ventas else 'rejilla-2' }}">

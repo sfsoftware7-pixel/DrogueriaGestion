@@ -98,4 +98,39 @@ async function cargar() {
   }
 }
 
+function claseEstadoPedido(estado) {
+  if (estado === 'ENTREGADO') return 'insignia-exito';
+  if (estado === 'EN_CAMINO' || estado === 'LISTO_PARA_RETIRO') return 'insignia-info';
+  if (estado === 'CANCELADO') return 'insignia-peligro';
+  return 'insignia-alerta';
+}
+
+async function cargarPedidosTienda() {
+  const cuerpo = $('#pedidos-tienda');
+  try {
+    const d = await api.get('/api/dashboard/pedidos-tienda');
+    if (!d.disponible) {
+      cuerpo.innerHTML = html`<tr><td colspan="6">No se pudo conectar con los pedidos de la tienda. Revise TIENDA_DB_NAME y el permiso SELECT de DB_USER.</td></tr>`;
+      return;
+    }
+    cuerpo.innerHTML = d.pedidos.length
+      ? html`${d.pedidos.map((p) => html`<tr>
+        <td class="titulo-celda">${p.codigo}</td>
+        <td>${p.cliente}</td>
+        <td class="sub-celda">${p.productos}</td>
+        <td>${p.tipo_entrega_texto}</td>
+        <td><span class="insignia ${claseEstadoPedido(p.estado)}">${p.estado_texto}</span></td>
+        <td class="nowrap">${fechaHora(p.updated_at)}</td>
+        </tr>`)}`
+      : html`<tr><td colspan="6">No hay pedidos activos o entregados hoy.</td></tr>`;
+    $('#pedidos-tienda-actualizado').textContent = `Actualizado ${fechaHora(new Date())} · se renueva cada 15 segundos`;
+  } catch (e) {
+    cuerpo.innerHTML = html`<tr><td colspan="6">No se pudieron actualizar los pedidos. ${e.message}</td></tr>`;
+  }
+}
+
 cargar();
+if ($('#pedidos-tienda')) {
+  cargarPedidosTienda();
+  window.setInterval(() => { if (!document.hidden) cargarPedidosTienda(); }, 15000);
+}

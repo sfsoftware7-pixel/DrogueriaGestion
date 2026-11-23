@@ -131,6 +131,11 @@ INSERT INTO clientes (id_cliente, tipo_documento, numero_documento, nombres, ape
 (12, 'CC',  '1122334455', 'Julián David', 'Torres Medina', '3176549870', 'jdtorres@ejemplo.com', 'Carrera 30 # 41-22, Caudal', '2001-06-21', 0);
 
 -- ---------------------------------------------------------------------
+-- Datos geográficos demostrativos para el reporte del parcial. No se asigna
+-- nacionalidad al cliente con cédula de extranjería porque el documento no la determina.
+UPDATE clientes SET ciudad = 'Villavicencio' WHERE id_cliente BETWEEN 2 AND 12;
+UPDATE clientes SET pais = 'Colombia' WHERE id_cliente BETWEEN 2 AND 6 OR id_cliente BETWEEN 8 AND 12;
+
 --  Entradas de mercancía (dos facturas por proveedor)
 -- ---------------------------------------------------------------------
 INSERT INTO entradas (id_entrada, id_proveedor, numero_factura, fecha_entrada, observaciones, id_usuario) VALUES

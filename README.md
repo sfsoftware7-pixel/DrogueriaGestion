@@ -6,7 +6,7 @@ Sistema web académico para administrar las operaciones de una droguería y prot
 
 El repositorio contiene dos aplicaciones Flask independientes:
 
-- **Gestión interna** (`app/`): catálogo farmacéutico, usuarios y roles, clientes, recepción de compras, inventario por lotes, punto de venta, ventas, anulaciones, reportes, auditoría y exploración del modelo/consultas SQL. Usa la base `drogueria_gestion`.
+- **Gestión interna** (`app/`): catálogo farmacéutico, usuarios y roles, clientes, recepción de compras, inventario por lotes, punto de venta, ventas, seguimiento de pedidos web, anulaciones, reportes, auditoría y exploración del modelo/consultas SQL. Usa la base `drogueria_gestion` y lee los pedidos de `drogueria_db`.
 - **Tienda en línea** (`tienda/`): catálogo público, búsqueda, carrito de navegador, pedidos como invitado o con una cuenta existente, cobertura, despacho o retiro, carga de fórmula médica y seguimiento. Usa `drogueria_db`.
 
 Las bases y sus scripts de instalación son independientes; los identificadores entre ellas no son compartidos. La tienda es un prototipo con pago contra entrega y no incluye un panel administrativo ni una pasarela real.
@@ -18,6 +18,7 @@ Consulte el [índice de documentación](docs/README.md) para los requerimientos,
 - [Arquitectura implementada](docs/ARQUITECTURA_GENERAL.md)
 - [Bases de datos](docs/BASE_DATOS.md)
 - [Pruebas de caja negra, blanca y gris](docs/PRUEBAS.md)
+- [Entrega del parcial y generación de backup](docs/BASE_DATOS.md#5-instalación-y-respaldo)
 
 ## Tecnologías
 

@@ -22,6 +22,8 @@ class Config:
     DB_USER = os.getenv('DB_USER', 'drogueria_app')
     DB_PASSWORD = os.getenv('DB_PASSWORD', '')
     DB_NAME = os.getenv('DB_NAME', 'drogueria_gestion')
+    # Esquema de pedidos de tienda (se consulta con permisos de solo lectura).
+    TIENDA_DB_NAME = os.getenv('TIENDA_DB_NAME', 'drogueria_db')
 
     # Sesiones
     SESSION_COOKIE_NAME = 'drogueria_session'
@@ -44,3 +46,4 @@ class TestConfig(Config):
     # Las pruebas escriben datos: nunca deben usar la BD real. Créela con:
     #   python database/init_db.py --bd drogueria_gestion_test
     DB_NAME = os.getenv('DB_NAME_TEST', 'drogueria_gestion_test')
+    TIENDA_DB_NAME = os.getenv('TIENDA_DB_NAME_TEST', 'drogueria_db_test')

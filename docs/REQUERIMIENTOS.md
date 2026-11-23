@@ -23,11 +23,11 @@ Especificar el comportamiento observado en el código del repositorio para la en
 | RF-02 | Limitar intentos fallidos y bloquear temporalmente la cuenta. | `app/routes/auth.py`, `usuarios` |
 | RF-03 | Aplicar permisos basados en rol en el servidor. | `app/seguridad.py` |
 | RF-04 | Consultar, crear, editar y desactivar medicamentos y categorías. | `app/routes/medicamentos.py`, `categorias.py` |
-| RF-05 | Administrar clientes y proveedores. | `app/routes/clientes.py`, `proveedores.py` |
+| RF-05 | Consultar, crear, editar y eliminar clientes sin historial; conservar mediante desactivación los que tienen facturas. Administrar proveedores. | `app/routes/clientes.py`, `proveedores.py` |
 | RF-06 | Registrar recepción de mercancía, asociarla a proveedor/factura y crear o incrementar lotes. | `app/services/inventario.py` |
 | RF-07 | Registrar ajustes de inventario con motivo y movimiento de kárdex. | `app/services/inventario.py` |
-| RF-08 | Consultar existencias vigentes, lotes vencidos y alertas de vencimiento. | Vistas `v_stock_medicamentos`, `v_lotes_vencimiento` |
-| RF-09 | Registrar una venta con detalle, impuestos, descuento, medio de pago y cambio. | `app/services/ventas.py` |
+| RF-08 | Consultar existencias resumidas, lotes vencidos y alertas de vencimiento. | Tabla sincronizada `stock`, vistas `v_stock_medicamentos`, `v_lotes_vencimiento` |
+| RF-09 | Registrar una venta con detalle, impuestos, descuento, medio de pago y cambio, y conservar su cabecera histórica. | `app/services/ventas.py`, tabla `historial_facturas` |
 | RF-10 | Descontar existencias FEFO, excluyendo lotes vencidos y bloqueando filas durante la venta. | `app/services/ventas.py` |
 | RF-11 | Exigir identificador de fórmula para medicamentos que la requieran. | `app/services/ventas.py` |
 | RF-12 | Anular una venta una sola vez, restaurar existencias a los lotes originales y dejar kárdex. | `app/services/ventas.py` |
@@ -38,6 +38,9 @@ Especificar el comportamiento observado en el código del repositorio para la en
 | RF-17 | Crear pedido de tienda en una transacción, congelar precio/descuento y asignar lote FEFO por sede. | `tienda/app/servicios/pedidos.py` |
 | RF-18 | Consultar seguimiento mediante sesión autorizada o código y documento coincidentes. | `tienda/app/api/pedidos.py` |
 | RF-19 | Iniciar/cerrar sesión de clientes existentes y consultar datos e historial de pedidos; no hay registro público. | `tienda/app/api/cuenta.py`, `tienda/app/servicios/cuentas.py` |
+| RF-20 | Capturar ciudad y país del cliente y emitir un informe imprimible agrupado por país para administrador y vendedor. | `app/templates/_modal_cliente.html`, `/clientes/reporte-pais` |
+| RF-21 | Administrar usuarios con altas, consultas, modificaciones y eliminación protegida; desactivar cuentas que tengan operaciones relacionadas. | `app/routes/usuarios.py` |
+| RF-22 | Mantener el stock resumido al día y guardar una cabecera por factura dentro de la transacción de venta. | Triggers de `database/04_mejoras.sql` |
 
 ## 4. Requerimientos no funcionales
 
@@ -64,6 +67,8 @@ Especificar el comportamiento observado en el código del repositorio para la en
 8. Una factura de proveedor no se puede registrar dos veces para el mismo proveedor.
 9. El total del pedido de tienda cumple `subtotal - descuento + costo_envio`.
 10. La compra en línea descuenta el inventario de la sede seleccionada dentro de la transacción.
+11. Los clientes nuevos requieren ciudad y país; el país desconocido de registros históricos se conserva como “Sin especificar”.
+12. No se permite borrar clientes con facturas ni usuarios con ventas o entradas; se desactivan para preservar trazabilidad.
 
 ## 6. Límites y supuestos
 

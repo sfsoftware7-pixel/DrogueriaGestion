@@ -284,6 +284,8 @@ img, svg { display: block; }
 .tabla .sub-celda { font-size: 12px; color: var(--texto-3); }
 .tabla tfoot td { font-weight: 700; background: var(--superficie-2); border-top: 1px solid var(--borde); }
 .tabla-compacta td, .tabla-compacta th { padding: 8px 12px; }
+.tabla-pedidos-tienda { min-width: 850px; }
+.tabla-pedidos-gestion { min-width: 1120px; }
 
 .vacio { padding: 46px 20px; text-align: center; color: var(--texto-3); }
 .vacio .icono { width: 40px; height: 40px; margin: 0 auto 10px; stroke-width: 1.5; opacity: .6; }
@@ -535,6 +537,16 @@ dialog.modal::backdrop { background: rgba(6, 30, 27, .55); backdrop-filter: blur
 [data-tema="oscuro"] .sql-clave { color: var(--marca-500); }
 .sql-parametro { display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--info-fondo); color: var(--info); }
 .sql-nota { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radio-sm); background: var(--info-fondo); color: var(--info); font-size: 13px; }
+.sql-biblioteca-lista { padding: 0 20px 20px; }
+.sql-biblioteca-lista .grupo-acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.sql-workbench-grupo { margin-top: 16px; }
+.sql-workbench-grupo h3 { margin: 0 0 8px; font-size: 14px; color: var(--texto-2); }
+.sql-workbench-ejemplo { border-top: 1px solid var(--borde); padding: 10px 0; }
+.sql-workbench-ejemplo summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.sql-workbench-ejemplo summary strong { font-size: 13px; }
+.sql-workbench-ejemplo summary span { color: var(--texto-3); font-size: 12px; }
+.sql-workbench-acciones { display: flex; justify-content: flex-end; margin: 10px 0 6px; }
+.sql-workbench-ejemplo .sql-codigo { max-height: 420px; }
 .sql-nota .icono { flex: none; margin-top: 2px; }
 .sql-resumen { display: flex; flex-wrap: wrap; gap: 6px; }
 .sql-resumen .insignia { white-space: normal; }

@@ -51,11 +51,12 @@ def create_app(config_object=Config):
 
 def registrar_blueprints(app):
     from .routes import (analisis_abc, auditoria, auth, categorias, clientes, configuracion, consultas, dashboard,
-                         inventario, medicamentos, modelo, paginas, proveedores, reportes, usuarios, ventas)
+                         inventario, medicamentos, modelo, paginas, pedidos_tienda, proveedores, reportes, usuarios,
+                         ventas)
 
     app.register_blueprint(paginas.bp)
     for modulo in (auth, dashboard, medicamentos, categorias, proveedores, clientes, inventario,
-                   ventas, reportes, usuarios, auditoria, configuracion, analisis_abc, consultas, modelo):
+                   ventas, pedidos_tienda, reportes, usuarios, auditoria, configuracion, analisis_abc, consultas, modelo):
         app.register_blueprint(modulo.bp, url_prefix='/api')
 
 
