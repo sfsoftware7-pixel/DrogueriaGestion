@@ -1,0 +1,43 @@
+  {#- Cierre, pie, avisos y chatbot: los comparten todas las páginas #}
+  <footer class="footer pie closing" aria-labelledby="titulo-cierre">
+    <div class="wrap">
+      <div class="cierre">
+        <h2 id="titulo-cierre">Pedidos a domicilio y en sede</h2>
+        <a class="btn btn--primary" href="/#promociones">Ver promociones</a>
+      </div>
+      <p class="nombre-grande" aria-hidden="true">{{ marca }}</p>
+
+      <div class="pie-columnas">
+        <div>
+          <h3 class="pie-titulo">Compra</h3>
+          <ul class="pie-lista">
+            <li><a href="/#categorias">Categorías</a></li>
+            <li><a href="/#destacados">Productos destacados</a></li>
+            <li><a href="/#promociones">Promociones</a></li>
+            <li><a href="/carrito">Carrito</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="pie-titulo">Servicio</h3>
+          <ul class="pie-lista">
+            <li><a href="/#servicios">Domicilio y retiro en sede</a></li>
+            <li><a href="/#formula">Fórmula médica</a></li>
+            <li><a href="/seguimiento">Seguir mi pedido</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="pie-titulo">Datos personales</h3>
+          <p>Tratamos tus datos según la Ley 1581 de 2012 y solo para atender y despachar tus pedidos.</p>
+        </div>
+      </div>
+
+      <div class="pie-legal">
+        <p>© 2026 {{ marca }} · Proyecto académico: productos, precios y sedes ficticios</p>
+        {# Fotografías de reemplazo hasta tener las propias: autor, licencia y fuente en static/creditos.html #}
+        <a class="creditos" href="{{ url_for('static', filename='creditos.html') }}">Fotografías vía Wikimedia Commons</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="avisos" id="avisos" role="status" aria-live="polite"></div>
+  {% include '_chat.html' %}

@@ -1,0 +1,213 @@
+{%- set marca = 'Sanalivio' -%}
+<!doctype html>
+<html lang="es-CO" data-type="place" data-radius="soft" data-buttons="solid" data-motion>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ marca }}: droguería con domicilio y retiro en sede</title>
+  <meta name="description" content="Medicamentos, vitaminas y cuidado personal a domicilio o para recoger en sede. Un farmacéutico revisa cada fórmula médica antes del despacho.">
+  <meta name="site-kind" content="other">
+  <meta name="page-type" content="place">
+  <meta name="page-kind" content="place">
+  <meta name="theme-color" content="#f3f3ee">
+  <meta property="og:title" content="{{ marca }}: droguería con domicilio y retiro en sede">
+  <meta property="og:description" content="Pide medicamentos y productos de cuidado personal a domicilio o recógelos en una sede.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="{{ url_for('static', filename='img/fotos/photo-f109329026-1280.jpg', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- <link rel="canonical" href="https://dominio-del-cliente/"> cuando exista el dominio -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/taste/motion/motion.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+  <script src="{{ url_for('static', filename='js/arranque.js') }}"></script>
+  <link rel="modulepreload" href="{{ url_for('static', filename='vendor/taste/moments/moments.js') }}">
+  <link rel="modulepreload" href="{{ url_for('static', filename='vendor/taste/moments/lib.js') }}">
+  <script type="module" src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='vendor/taste/motion/motion.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='vendor/taste/moments/moments.js') }}"></script>
+</head>
+<body>
+<!--
+  Tipo: place (droguería de barrio con sedes; la tienda en línea es su sección de productos). Skill: tasteskill 2.5.
+  Reparto: paleta propia del brief (start.mjs brand): fondo papel #f3f3ee, tinta azul petróleo #13293a, acción verde
+  farmacia #0e6b4e: los tonos de salud que pide el brief. Tipografía figtree. nav-cards, footer-columns, ritmo space,
+  botones solid, marca arc, oferta pair (no usado: el brief pide carrusel y grilla), lugar story (la fórmula médica junto
+  a una foto), momento de tipografía name (cierre con el nombre), momento dealt word-highlight (fórmula médica).
+  Excepciones al brief aprobado (documentadas en la entrega): banner rotativo y carrusel de destacados, header sticky que
+  se compacta y oculta la barra promocional, secciones de alto variable de tienda en línea.
+-->
+  {% include '_encabezado.html' %}
+
+  <main id="contenido" tabindex="-1">
+    <section class="hero" data-enter aria-labelledby="hero-h">
+      <div class="wrap">
+        <figure class="hero__media">
+          <img src="{{ url_for('static', filename='img/fotos/photo-f109329026-1280.jpg') }}"
+               srcset="{{ url_for('static', filename='img/fotos/photo-f109329026-500.jpg') }} 500w, {{ url_for('static', filename='img/fotos/photo-f109329026-960.jpg') }} 960w, {{ url_for('static', filename='img/fotos/photo-f109329026-1280.jpg') }} 1280w"
+               sizes="(max-width: 639px) 167vw, 100vw" width="1280" height="962"
+               alt="Pasillo de droguería con estanterías de medicamentos y productos de cuidado personal"
+               fetchpriority="high" decoding="async" data-source="stand-in" data-subject="stand-in">
+        </figure>
+
+        <div class="hero-fila">
+          <div class="hero-texto">
+            <h1 id="hero-h">Medicamentos a domicilio y retiro en sede</h1>
+            <p class="hero__lead">Vitaminas, cuidado personal y botiquín en el mismo pedido; un farmacéutico revisa cada fórmula médica.</p>
+            <a class="btn btn--primary" href="#promociones">Ver promociones</a>
+          </div>
+
+          <aside class="promos" id="banner" aria-roledescription="carrusel" aria-label="Promociones vigentes">
+            <div class="promos__diapositivas" id="banner-diapositivas" aria-live="off">
+              {% if banners %}
+                {% for b in banners %}
+                <article class="promo{% if loop.first %} activa{% endif %}" aria-roledescription="diapositiva"
+                         aria-label="{{ loop.index }} de {{ banners|length }}"{% if not loop.first %} aria-hidden="true" inert{% endif %}>
+                  <p class="promo__etiqueta">{{ b.etiqueta }}</p>
+                  <p class="promo__titulo">{{ b.titulo }}</p>
+                  <p class="promo__texto">{{ b.subtitulo }}</p>
+                </article>
+                {% endfor %}
+              {% else %}
+                <article class="promo activa" aria-roledescription="diapositiva" aria-label="1 de 1">
+                  <p class="promo__etiqueta">Fórmula médica</p>
+                  <p class="promo__titulo">Productos con fórmula, revisados antes del despacho</p>
+                  <p class="promo__texto">La fórmula se carga al pagar y la revisa un farmacéutico.</p>
+                </article>
+              {% endif %}
+            </div>
+            {% if banners|length > 1 %}
+            <div class="promos__controles">
+              <p class="promos__contador" id="banner-contador" aria-hidden="true">1 / {{ banners|length }}</p>
+              <button class="boton-icono" type="button" id="banner-anterior">
+                <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg><span class="solo-lectores">Promoción anterior</span>
+              </button>
+              <button class="boton-icono" type="button" id="banner-siguiente">
+                <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg><span class="solo-lectores">Promoción siguiente</span>
+              </button>
+              <button class="promos__pausa" type="button" id="banner-pausa" aria-pressed="false">Pausar</button>
+            </div>
+            {% endif %}
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" id="categorias" aria-labelledby="titulo-categorias">
+      <div class="wrap">
+        <div class="cabeza">
+          <h2 id="titulo-categorias">Medicamentos por categoría</h2>
+          <p class="cabeza__lado">De los analgésicos al botiquín, con el número de productos de cada una.</p>
+        </div>
+        <div id="estado-categorias"></div>
+        <ul class="lista-categorias" id="grilla-categorias" aria-busy="true">
+          {% for _ in range(10) %}<li class="fila-esqueleto"><span class="esqueleto esqueleto-linea"></span></li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="seccion" id="destacados" aria-labelledby="titulo-destacados">
+      <div class="wrap">
+        <div class="cabeza">
+          <h2 id="titulo-destacados">Productos destacados</h2>
+          <div class="cabeza__lado cabeza__lado--controles">
+            <p>Precios con IVA incluido.</p>
+            <div class="carrusel-controles">
+              <button class="boton-icono boton-borde" type="button" data-carrusel="carrusel-destacados" data-direccion="-1">
+                <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg><span class="solo-lectores">Ver productos anteriores</span>
+              </button>
+              <button class="boton-icono boton-borde" type="button" data-carrusel="carrusel-destacados" data-direccion="1">
+                <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg><span class="solo-lectores">Ver más productos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="estado-destacados"></div>
+        <ul class="carrusel" id="carrusel-destacados" aria-busy="true" aria-label="Productos destacados" tabindex="0">
+          {% for _ in range(4) %}<li class="producto producto--esqueleto"><span class="esqueleto esqueleto-etiqueta"></span><span class="esqueleto esqueleto-linea"></span><span class="esqueleto esqueleto-linea corta"></span><span class="esqueleto esqueleto-boton"></span></li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="seccion" id="promociones" aria-labelledby="titulo-promociones">
+      <div class="wrap">
+        <div class="cabeza">
+          <h2 id="titulo-promociones">Promociones vigentes</h2>
+          <p class="cabeza__lado">El precio de cada tarjeta ya tiene aplicado el descuento de su campaña.</p>
+        </div>
+        <div id="estado-promociones"></div>
+        <ul class="grilla-productos" id="grilla-promociones" aria-busy="true">
+          {% for _ in range(4) %}<li class="producto producto--esqueleto"><span class="esqueleto esqueleto-etiqueta"></span><span class="esqueleto esqueleto-linea"></span><span class="esqueleto esqueleto-linea corta"></span><span class="esqueleto esqueleto-boton"></span></li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <section class="seccion declaracion" id="formula" data-moment="word-highlight" aria-label="Fórmula médica">
+      <div class="wrap declaracion__fila">
+        <div class="declaracion__texto">
+          <p class="t-label">Fórmula médica</p>
+          <p class="mo-wh__text">Si tu producto requiere fórmula médica, la cargas al pagar y un <strong>farmacéutico</strong> la revisa antes del despacho; sin fórmula aprobada, ese producto no sale de la sede.</p>
+        </div>
+        <figure class="foto declaracion__foto">
+          <img src="{{ url_for('static', filename='img/fotos/photo-f65717909-960.jpg') }}"
+               srcset="{{ url_for('static', filename='img/fotos/photo-f65717909-500.jpg') }} 500w, {{ url_for('static', filename='img/fotos/photo-f65717909-960.jpg') }} 960w, {{ url_for('static', filename='img/fotos/photo-f65717909.jpg') }} 1280w"
+               sizes="(max-width: 1023px) 100vw, 486px" width="1280" height="934"
+               alt="Tiras de tabletas, cápsulas en un frasco de vidrio y un gotero sobre fondo blanco"
+               loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in">
+        </figure>
+      </div>
+    </section>
+
+    <section class="seccion" id="servicios" aria-labelledby="titulo-servicios">
+      <div class="wrap">
+        <div class="cabeza">
+          <h2 id="titulo-servicios">Domicilio, sedes y farmacéutico</h2>
+          <p class="cabeza__lado">Tres formas de recibir tu pedido y resolver tus dudas.</p>
+        </div>
+        <ul class="servicios">
+          <li class="servicio">
+            <figure class="foto">
+              <img src="{{ url_for('static', filename='img/fotos/photo-f120365151-960.jpg') }}"
+                   srcset="{{ url_for('static', filename='img/fotos/photo-f120365151-500.jpg') }} 500w, {{ url_for('static', filename='img/fotos/photo-f120365151-960.jpg') }} 960w, {{ url_for('static', filename='img/fotos/photo-f120365151.jpg') }} 1280w"
+                   sizes="(max-width: 767px) 100vw, 384px" width="1280" height="853"
+                   alt="Manos que firman en un celular la entrega de un paquete"
+                   loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in">
+            </figure>
+            <p class="t-label">Domicilio</p>
+            <h3>Llevamos tu pedido a la casa</h3>
+            <p>El costo del envío depende de tu ciudad y lo ves antes de pagar.</p>
+          </li>
+          <li class="servicio">
+            <figure class="foto">
+              <img src="{{ url_for('static', filename='img/fotos/photo-f163282572-500.jpg') }}"
+                   width="500" height="667" sizes="(max-width: 767px) 100vw, 384px"
+                   alt="Interior de una droguería pequeña con estanterías y mostrador"
+                   loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in">
+            </figure>
+            <p class="t-label">Retiro en sede</p>
+            <h3>Recoge gratis en una sede</h3>
+            <p>Eliges la sede al pagar y pasas por tu pedido cuando esté listo.</p>
+          </li>
+          <li class="servicio">
+            <figure class="foto">
+              <img src="{{ url_for('static', filename='img/fotos/photo-f1729055-960.jpg') }}"
+                   srcset="{{ url_for('static', filename='img/fotos/photo-f1729055-500.jpg') }} 500w, {{ url_for('static', filename='img/fotos/photo-f1729055-960.jpg') }} 960w"
+                   sizes="(max-width: 767px) 100vw, 384px" width="960" height="722"
+                   alt="Cajoneras de un dispensario con cajas de medicamentos ordenadas por casilla"
+                   loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in">
+            </figure>
+            <p class="t-label">Atención farmacéutica</p>
+            <h3>Resolvemos tus dudas sobre medicamentos</h3>
+            <p>Un farmacéutico revisa las fórmulas y te orienta sobre el uso de cada producto.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  {% include '_pie.html' %}
+</body>
+</html>

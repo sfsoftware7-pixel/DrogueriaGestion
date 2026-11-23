@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Reportes{% endblock %}
+{% block ruta %}Análisis{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Reportes gerenciales</h1>
+    <p>Indicadores de ventas, productos de mayor rotación e inventario valorizado.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="btn-imprimir">{{ icono('imprimir') }} Imprimir</button>
+  </div>
+</div>
+
+<section class="tarjeta mb no-imprimir">
+  <div class="filtros" style="border-bottom:none">
+    <span class="etiqueta">Periodo:</span>
+    <input class="control" type="date" id="r-desde" aria-label="Desde">
+    <input class="control" type="date" id="r-hasta" aria-label="Hasta">
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="0">Hoy</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="6">7 días</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="29">30 días</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="mes">Este mes</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="89">90 días</button>
+    {% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.totales" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL de los totales</button>{% endif %}
+  </div>
+</section>
+
+<section class="rejilla rejilla-4 mb" id="kpis-reporte">
+  <article class="tarjeta kpi"><div class="kpi-icono marca">{{ icono('billete') }}</div><div><div class="kpi-etiqueta">Total vendido</div><div class="kpi-valor" id="k-total">–</div><div class="kpi-detalle" id="k-total-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono info">{{ icono('recibo') }}</div><div><div class="kpi-etiqueta">Número de ventas</div><div class="kpi-valor" id="k-ventas">–</div><div class="kpi-detalle" id="k-ventas-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono exito">{{ icono('tendencia') }}</div><div><div class="kpi-etiqueta">Utilidad bruta</div><div class="kpi-valor" id="k-utilidad">–</div><div class="kpi-detalle" id="k-utilidad-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono alerta">{{ icono('pildora') }}</div><div><div class="kpi-etiqueta">Unidades dispensadas</div><div class="kpi-valor" id="k-unidades">–</div><div class="kpi-detalle" id="k-unidades-d">&nbsp;</div></div></article>
+</section>
+
+<section class="rejilla rejilla-2-1 mb">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Ventas por día</h2><p>Obtenido con el procedimiento almacenado <span class="mono">sp_reporte_ventas</span></p></div>
+      <div class="acciones-cabecera">{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.diario" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" id="exp-diario">{{ icono('descargar', 'icono-sm') }} CSV</button></div></header>
+    <div class="tarjeta-cuerpo"><div id="g-diario" style="min-height:260px"></div></div>
+  </article>
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Métodos de pago</h2><p>Participación sobre el total</p></div>{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.por_metodo" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}</header>
+    <div class="tarjeta-cuerpo" id="g-metodos"></div>
+  </article>
+</section>
+
+<section class="rejilla rejilla-2 mb">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Ventas por categoría</h2></div>{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.por_categoria" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}</header>
+    <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+      <thead><tr><th>Categoría</th><th class="num">Unidades</th><th class="num">Total</th><th style="width:30%"></th></tr></thead>
+      <tbody id="t-categorias"></tbody></table></div>
+  </article>
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Ventas por vendedor</h2></div>{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.por_vendedor" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}</header>
+    <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+      <thead><tr><th>Vendedor</th><th class="num">Ventas</th><th class="num">Total</th><th class="num">Ticket prom.</th></tr></thead>
+      <tbody id="t-vendedores"></tbody></table></div>
+  </article>
+</section>
+
+<section class="tarjeta mb">
+  <header class="tarjeta-cabecera"><div><h2>Medicamentos más vendidos</h2><p>Top 15 del periodo por unidades</p></div>
+    <div class="acciones-cabecera">{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.top" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" id="exp-top">{{ icono('descargar', 'icono-sm') }} CSV</button></div></header>
+  <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+    <thead><tr><th>#</th><th>Medicamento</th><th>Categoría</th><th class="num">Unidades</th><th class="num">Ventas</th><th class="num">Total</th><th class="num">Utilidad</th></tr></thead>
+    <tbody id="t-top"></tbody></table></div>
+</section>
+
+<section class="rejilla rejilla-2">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Inventario valorizado</h2><p>Existencias vigentes a la fecha, por categoría</p></div>{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.inventario" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}</header>
+    <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+      <thead><tr><th>Categoría</th><th class="num">Unidades</th><th class="num">Valor costo</th><th class="num">Valor venta</th></tr></thead>
+      <tbody id="t-inventario"></tbody>
+      <tfoot id="t-inventario-total"></tfoot></table></div>
+  </article>
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Sugerido de compra</h2><p>Productos agotados o bajo el mínimo</p></div>
+      <div class="acciones-cabecera">{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="reportes.stock_bajo" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" id="exp-pedido">{{ icono('descargar', 'icono-sm') }} CSV</button></div></header>
+    <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+      <thead><tr><th>Medicamento</th><th class="num">Disponible</th><th class="num">Mínimo</th><th class="num">Sugerido</th></tr></thead>
+      <tbody id="t-pedido"></tbody></table></div>
+  </article>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/reportes.js') }}"></script>{% endblock %}

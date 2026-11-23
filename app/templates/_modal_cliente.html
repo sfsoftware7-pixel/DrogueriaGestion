@@ -1,0 +1,59 @@
+{% from '_macros.html' import modal_cabecera %}
+<dialog class="modal" id="modal-cliente" aria-labelledby="titulo-cliente">
+  <form id="form-cliente" novalidate>
+    {{ modal_cabecera('Nuevo cliente', 'Los campos con * son obligatorios', 'titulo-cliente') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla">
+        <div class="campo">
+          <label for="cl-tipo">Tipo de documento <span class="req">*</span></label>
+          <select id="cl-tipo" name="tipo_documento" required>
+            <option value="CC">Cédula de ciudadanía</option>
+            <option value="TI">Tarjeta de identidad</option>
+            <option value="CE">Cédula de extranjería</option>
+            <option value="PA">Pasaporte</option>
+            <option value="NIT">NIT</option>
+            <option value="RC">Registro civil</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="cl-numero">Número de documento <span class="req">*</span></label>
+          <input id="cl-numero" name="numero_documento" maxlength="20" required>
+        </div>
+        <div class="campo">
+          <label for="cl-nombres">Nombres o razón social <span class="req">*</span></label>
+          <input id="cl-nombres" name="nombres" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="cl-apellidos">Apellidos</label>
+          <input id="cl-apellidos" name="apellidos" maxlength="80">
+        </div>
+        <div class="campo">
+          <label for="cl-telefono">Teléfono</label>
+          <input id="cl-telefono" name="telefono" maxlength="20" inputmode="tel">
+        </div>
+        <div class="campo">
+          <label for="cl-email">Correo electrónico</label>
+          <input id="cl-email" name="email" type="email" maxlength="120">
+        </div>
+        <div class="campo">
+          <label for="cl-direccion">Dirección</label>
+          <input id="cl-direccion" name="direccion" maxlength="150">
+        </div>
+        <div class="campo">
+          <label for="cl-nacimiento">Fecha de nacimiento</label>
+          <input id="cl-nacimiento" name="fecha_nacimiento" type="date">
+        </div>
+        <div class="campo ancho-total">
+          <label class="check"><input type="checkbox" name="autoriza_datos">
+            <span>El cliente autoriza el tratamiento de sus datos personales
+              <small>Conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013. Los datos se usan solo para la atención y facturación.</small></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar-cliente">Guardar</button>
+    </footer>
+  </form>
+</dialog>

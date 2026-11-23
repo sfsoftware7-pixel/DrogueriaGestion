@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Panel principal{% endblock %}
+{% block ruta %}Inicio{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Hola, {{ usuario_actual.nombres.split(' ')[0] }}</h1>
+    <p>Este es el resumen de la operación de la droguería.</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('inventario.editar') %}
+    <a class="btn btn-secundario" href="{{ url_for('paginas.inventario') }}#entrada">{{ icono('camion') }} Registrar entrada</a>
+    {% endif %}
+    {% if puede('ventas.crear') %}
+    <a class="btn btn-primario" href="{{ url_for('paginas.nueva_venta') }}">{{ icono('carrito') }} Nueva venta</a>
+    {% endif %}
+  </div>
+</div>
+
+{% set ver_ventas = puede('ventas.ver') %}
+<section class="rejilla {{ 'rejilla-4' if ver_ventas else 'rejilla-2' }} mb" aria-label="Indicadores">
+  {% if ver_ventas %}
+  <article class="tarjeta kpi">
+    <div class="kpi-icono marca">{{ icono('billete') }}</div>
+    <div>
+      <div class="kpi-etiqueta">Ventas de hoy</div>
+      <div class="kpi-valor" id="kpi-hoy"><span class="esqueleto" style="display:block;width:120px;height:26px"></span></div>
+      <div class="kpi-detalle" id="kpi-hoy-detalle">&nbsp;</div>
+    </div>
+  </article>
+  <article class="tarjeta kpi">
+    <div class="kpi-icono info">{{ icono('tendencia') }}</div>
+    <div>
+      <div class="kpi-etiqueta">Ventas del mes</div>
+      <div class="kpi-valor" id="kpi-mes"><span class="esqueleto" style="display:block;width:120px;height:26px"></span></div>
+      <div class="kpi-detalle" id="kpi-mes-detalle">&nbsp;</div>
+    </div>
+  </article>
+  {% endif %}
+  <article class="tarjeta kpi">
+    <div class="kpi-icono alerta">{{ icono('caja') }}</div>
+    <div>
+      <div class="kpi-etiqueta">Stock bajo o agotado</div>
+      <div class="kpi-valor" id="kpi-stock"><span class="esqueleto" style="display:block;width:60px;height:26px"></span></div>
+      <div class="kpi-detalle" id="kpi-stock-detalle">&nbsp;</div>
+    </div>
+    <a class="kpi-enlace" href="{{ url_for('paginas.medicamentos') }}?estado_stock=BAJO" aria-label="Ver medicamentos con stock bajo"></a>
+  </article>
+  <article class="tarjeta kpi">
+    <div class="kpi-icono peligro">{{ icono('calendario') }}</div>
+    <div>
+      <div class="kpi-etiqueta">Lotes vencidos o críticos</div>
+      <div class="kpi-valor" id="kpi-venc"><span class="esqueleto" style="display:block;width:60px;height:26px"></span></div>
+      <div class="kpi-detalle" id="kpi-venc-detalle">&nbsp;</div>
+    </div>
+    {% if puede('inventario.ver') %}
+    <a class="kpi-enlace" href="{{ url_for('paginas.vencimientos') }}" aria-label="Ver vencimientos"></a>
+    {% endif %}
+  </article>
+</section>
+
+{% if ver_ventas %}
+<section class="rejilla rejilla-2-1 mb">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div><h2>Ventas de los últimos 14 días</h2><p>Total vendido por día (ventas completadas)</p></div>
+      {% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="panel.tendencia" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}
+    </header>
+    <div class="tarjeta-cuerpo"><div id="grafico-tendencia" style="min-height:260px"></div></div>
+  </article>
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div><h2>Más vendidos</h2><p>Unidades en los últimos 30 días</p></div>
+      {% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="panel.top" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}
+    </header>
+    <div class="tarjeta-cuerpo" id="top-medicamentos"></div>
+  </article>
+</section>
+{% endif %}
+
+<section class="rejilla {{ 'rejilla-3' if ver_ventas else 'rejilla-2' }}">
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div><h2>Alertas de inventario</h2><p>Productos agotados o bajo el mínimo</p></div>
+      <div class="acciones-cabecera">{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="panel.alertas_stock" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}<a class="btn btn-fantasma btn-sm" href="{{ url_for('paginas.medicamentos') }}?estado_stock=BAJO">Ver todo</a></div>
+    </header>
+    <ul class="lista" id="alertas-stock"></ul>
+  </article>
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div><h2>Próximos vencimientos</h2><p>Lotes con existencias por vencer</p></div>
+      <div class="acciones-cabecera">{% if puede('consultas.ver') %}<button class="btn btn-fantasma btn-sm no-imprimir" type="button" data-ver-sql="panel.alertas_vencimiento" title="Ver la consulta SQL y su EXPLAIN">{{ icono('documento', 'icono-sm') }} SQL</button>{% endif %}{% if puede('inventario.ver') %}<a class="btn btn-fantasma btn-sm" href="{{ url_for('paginas.vencimientos') }}">Ver todo</a>{% endif %}</div>
+    </header>
+    <ul class="lista" id="alertas-vencimiento"></ul>
+  </article>
+  {% if ver_ventas %}
+  <article class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <div><h2>Últimas ventas</h2><p>Movimiento reciente de caja</p></div>
+      <a class="btn btn-fantasma btn-sm" href="{{ url_for('paginas.ventas') }}">Ver todo</a>
+    </header>
+    <ul class="lista" id="ultimas-ventas"></ul>
+  </article>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>{% endblock %}

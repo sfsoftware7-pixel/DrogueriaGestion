@@ -1,0 +1,54 @@
+  {#- Barra promocional y encabezado sticky: los comparten todas las páginas (comportamiento en js/encabezado.js) #}
+  <div class="barra-promo" id="barra-promo">
+    <p class="wrap">Retiro gratis en sede · El costo del domicilio lo ves antes de pagar</p>
+  </div>
+
+  <header class="encabezado" id="encabezado">
+    <div class="encabezado-barra">
+      <div class="wrap encabezado-principal">
+        <a class="skip-link" href="#contenido">Saltar al contenido</a>
+        <button class="boton-icono menu-boton" id="menu-boton" type="button" aria-expanded="false" aria-controls="menu-categorias">
+          <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path id="menu-icono" d="M4 8h16M4 16h16"/></svg>
+          <span class="solo-lectores" id="menu-boton-texto">Abrir el menú de categorías</span>
+        </button>
+
+        <a class="logo" href="/">
+          <span class="mark" data-mark="arc" aria-hidden="true"></span>
+          <span class="logo-texto">{{ marca }}</span>
+        </a>
+
+        <form class="buscador" id="buscador" role="search" action="/" autocomplete="off">
+          <label class="solo-lectores" for="buscar">Buscar productos</label>
+          <svg class="icono buscador-icono" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <input id="buscar" name="q" type="search" placeholder="Busca un medicamento o un principio activo" maxlength="60"
+                 role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugerencias"
+                 aria-describedby="buscar-ayuda">
+          <span class="solo-lectores" id="buscar-ayuda">Escribe al menos 2 letras; con las flechas recorres las sugerencias.</span>
+          <div class="sugerencias" id="sugerencias-panel" hidden>
+            <ul class="sugerencias-lista" id="sugerencias" role="listbox" aria-label="Sugerencias de productos"></ul>
+            <p class="sugerencias-estado" id="sugerencias-estado" role="status"></p>
+          </div>
+        </form>
+
+        <button class="nav-accion" id="boton-cuenta" type="button">
+          <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5"/></svg>
+          <span class="nav-accion__texto">Mi cuenta</span>
+        </button>
+
+        <a class="btn btn--secondary carrito" id="boton-carrito" href="/carrito" aria-describedby="carrito-descripcion">
+          <span class="carrito__texto">Carrito</span>
+          <span class="contador" id="contador-carrito" aria-hidden="true">0</span>
+          <span class="solo-lectores" id="carrito-descripcion">0 productos</span>
+        </a>
+      </div>
+
+      <nav class="menu-categorias" id="menu-categorias" aria-label="Categorías">
+        <div class="wrap menu-fila">
+          <ul class="menu-lista" id="menu-lista" aria-busy="true">
+            {% for _ in range(7) %}<li><span class="esqueleto esqueleto-menu"></span></li>{% endfor %}
+          </ul>
+          <a class="menu-todas" href="/#categorias">Todas las categorías</a>
+        </div>
+      </nav>
+    </div>
+  </header>

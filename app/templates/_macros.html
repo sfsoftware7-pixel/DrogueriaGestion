@@ -1,0 +1,25 @@
+{% macro icono(nombre, clase='') -%}
+<svg class="icono {{ clase }}" aria-hidden="true"><use href="#i-{{ nombre }}"/></svg>
+{%- endmacro %}
+
+{% macro enlace_nav(endpoint, clave, texto, nombre_icono, pagina_actual, contador_id=None) -%}
+<a class="nav-enlace {{ 'activo' if pagina_actual == clave }}" href="{{ url_for(endpoint) }}"
+   {% if pagina_actual == clave %}aria-current="page"{% endif %}>
+  {{ icono(nombre_icono) }}<span>{{ texto }}</span>
+  {% if contador_id %}<span class="nav-contador" id="{{ contador_id }}" hidden></span>{% endif %}
+</a>
+{%- endmacro %}
+
+{% macro modal_cabecera(titulo, subtitulo='', id_titulo='') -%}
+<header class="modal-cabecera">
+  <div>
+    <h2 {% if id_titulo %}id="{{ id_titulo }}"{% endif %}>{{ titulo }}</h2>
+    {% if subtitulo %}<p>{{ subtitulo }}</p>{% endif %}
+  </div>
+  <button type="button" class="btn-icono" data-cerrar-modal aria-label="Cerrar">{{ icono('x') }}</button>
+</header>
+{%- endmacro %}
+
+{% macro paginacion_vacia(id) -%}
+<div class="paginacion" id="{{ id }}"></div>
+{%- endmacro %}

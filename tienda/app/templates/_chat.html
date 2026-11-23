@@ -1,0 +1,25 @@
+  {#- Chatbot por reglas (js/chat.js): sin IA ni servicios externos. Panel no modal; Escape lo cierra. #}
+  <div class="chat" id="chat">
+    <button class="btn btn--primary chat-boton" id="chat-boton" type="button" aria-expanded="false" aria-controls="chat-panel">
+      <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/></svg>
+      <span>¿Te ayudamos?</span>
+    </button>
+    <section class="chat-panel" id="chat-panel" role="dialog" aria-modal="false" aria-labelledby="chat-titulo" hidden>
+      <div class="chat-cabeza">
+        <h2 class="chat-titulo" id="chat-titulo">Asistente de {{ marca }}</h2>
+        <button class="boton-icono" id="chat-cerrar" type="button">
+          <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          <span class="solo-lectores">Cerrar el asistente</span>
+        </button>
+      </div>
+      <div class="chat-mensajes" id="chat-mensajes" role="log" aria-live="polite" aria-relevant="additions" tabindex="0"
+           aria-label="Conversación con el asistente"></div>
+      <div class="chat-rapidas" id="chat-rapidas" role="group" aria-label="Respuestas rápidas"></div>
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <label class="solo-lectores" for="chat-entrada">Escribe tu pregunta</label>
+        <input id="chat-entrada" type="text" maxlength="120" placeholder="Escribe tu pregunta" enterkeyhint="send">
+        <button class="btn btn--primary" type="submit">Enviar</button>
+      </form>
+      <p class="chat-nota">Respuestas automáticas: no reemplazan al farmacéutico ni a tu médico.</p>
+    </section>
+  </div>

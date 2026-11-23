@@ -1,0 +1,17 @@
+# Entorno y secretos
+.venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editores / sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Capturas y registros de la revisión de diseño (no los usa la aplicación)
+.taste-skill/

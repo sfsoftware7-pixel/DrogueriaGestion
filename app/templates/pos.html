@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Nueva venta{% endblock %}
+{% block ruta %}Ventas y dispensación{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Punto de venta</h1>
+    <p>Busque productos por nombre, principio activo o código de barras. Se dispensa primero el lote que vence antes (FEFO).</p>
+  </div>
+  <div class="encabezado-acciones tenue" style="font-size:12.5px;align-items:center">
+    <span><span class="atajo">F2</span> buscar</span>
+    <span><span class="atajo">F9</span> cobrar</span>
+  </div>
+</div>
+
+<div class="pos">
+  <div>
+    <section class="tarjeta mb">
+      <div class="tarjeta-cuerpo">
+        <div class="pos-buscador entrada-icono">
+          {{ icono('buscar') }}
+          <input class="control" type="search" id="buscar-producto" autocomplete="off" autofocus
+                 placeholder="Escriba al menos 2 letras o escanee el código…" aria-label="Buscar producto"
+                 role="combobox" aria-expanded="false" aria-controls="resultados-producto">
+          <div class="resultados" id="resultados-producto" role="listbox" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tarjeta mb">
+      <header class="tarjeta-cabecera">
+        <div><h2>Productos de la venta</h2><p id="resumen-items">Sin productos</p></div>
+        <button class="btn btn-fantasma btn-sm" type="button" id="btn-vaciar" hidden>{{ icono('papelera', 'icono-sm') }} Vaciar</button>
+      </header>
+      <div class="tabla-contenedor">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="num">Precio</th>
+              <th class="centro">Cantidad</th>
+              <th class="num">IVA</th>
+              <th class="num">Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="carrito"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tarjeta" id="panel-formula" hidden>
+      <header class="tarjeta-cabecera">
+        <div><h2>Fórmula médica</h2><p>Hay productos que solo se dispensan con prescripción</p></div>
+        <span class="etiqueta-rx">Rx</span>
+      </header>
+      <form class="tarjeta-cuerpo formulario-rejilla" id="form-formula" novalidate>
+        <div class="campo">
+          <label for="formula">Número de fórmula <span class="req">*</span></label>
+          <input id="formula" name="formula_medica" maxlength="60" placeholder="RX-123456">
+        </div>
+        <div class="campo">
+          <label for="medico">Médico que prescribe</label>
+          <input id="medico" name="medico" maxlength="120" placeholder="Dr(a). Nombre Apellido">
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <aside class="tarjeta resumen-venta">
+    <form id="form-venta" novalidate>
+      <div class="tarjeta-cuerpo" style="display:grid;gap:16px">
+        <div>
+          <div class="flex-entre" style="margin-bottom:6px">
+            <span class="etiqueta">Cliente</span>
+            <button class="btn btn-fantasma btn-sm" type="button" id="btn-nuevo-cliente">{{ icono('mas', 'icono-sm') }} Nuevo</button>
+          </div>
+          <div class="cliente-seleccionado" id="cliente-seleccionado"></div>
+          <div class="pos-buscador entrada-icono mt-1" style="position:relative">
+            <input class="control" type="search" id="buscar-cliente" autocomplete="off" placeholder="Buscar por documento o nombre…" aria-label="Buscar cliente" style="height:38px;font-size:13.5px;border-width:1px;padding-left:12px">
+            <div class="resultados" id="resultados-cliente" hidden></div>
+          </div>
+        </div>
+
+        <div>
+          <span class="etiqueta">Método de pago</span>
+          <div class="metodos-pago mt-1">
+            <label class="metodo-pago"><input type="radio" name="metodo_pago" value="EFECTIVO" checked><span>{{ icono('billete', 'icono-sm') }} Efectivo</span></label>
+            <label class="metodo-pago"><input type="radio" name="metodo_pago" value="TARJETA_DEBITO"><span>{{ icono('tarjeta', 'icono-sm') }} Débito</span></label>
+            <label class="metodo-pago"><input type="radio" name="metodo_pago" value="TARJETA_CREDITO"><span>{{ icono('tarjeta', 'icono-sm') }} Crédito</span></label>
+            <label class="metodo-pago"><input type="radio" name="metodo_pago" value="TRANSFERENCIA"><span>{{ icono('transferir', 'icono-sm') }} Transferencia</span></label>
+          </div>
+        </div>
+
+        <div class="formulario-rejilla">
+          <div class="campo">
+            <label for="descuento">Descuento ($)</label>
+            <input id="descuento" name="descuento" type="number" min="0" step="100" value="0">
+            {% if not puede('ventas.descuento_libre') %}<span class="ayuda" id="ayuda-descuento">&nbsp;</span>{% endif %}
+          </div>
+          <div class="campo" id="campo-recibido">
+            <label for="recibido">Dinero recibido</label>
+            <input id="recibido" name="monto_recibido" type="number" min="0" step="100" placeholder="0">
+          </div>
+        </div>
+
+        <div class="resumen-filas">
+          <div><span class="texto-2">Subtotal</span><span class="num" id="r-subtotal">$ 0</span></div>
+          <div><span class="texto-2">IVA</span><span class="num" id="r-iva">$ 0</span></div>
+          <div><span class="texto-2">Descuento</span><span class="num" id="r-descuento">$ 0</span></div>
+          <div class="resumen-total"><span>Total</span><strong id="r-total">$ 0</strong></div>
+          <div id="fila-cambio"><span class="texto-2">Cambio</span><strong class="num" id="r-cambio">$ 0</strong></div>
+        </div>
+
+        <div class="campo">
+          <label for="observaciones">Observaciones</label>
+          <input id="observaciones" name="observaciones" maxlength="255" placeholder="Opcional">
+        </div>
+
+        <button class="btn btn-primario btn-lg btn-bloque" type="submit" id="btn-cobrar" disabled>{{ icono('check') }} Registrar venta</button>
+        <button class="btn btn-fantasma btn-bloque" type="button" id="btn-cancelar">Cancelar venta</button>
+      </div>
+    </form>
+  </aside>
+</div>
+
+{% include '_modal_cliente.html' %}
+
+<dialog class="modal pequeno" id="modal-exito" aria-labelledby="titulo-exito">
+  <div class="modal-cuerpo centro">
+    <div class="confirmacion-icono" style="margin:4px auto 12px;background:var(--exito-fondo);color:var(--exito)">{{ icono('check', 'icono-lg') }}</div>
+    <h2 id="titulo-exito" style="font-size:19px">Venta registrada</h2>
+    <p class="texto-2 mt-1" id="exito-numero"></p>
+    <div class="resumen-total" style="justify-content:center;gap:12px;border-top:none"><strong id="exito-total"></strong></div>
+    <p class="fuerte" id="exito-cambio"></p>
+  </div>
+  <footer class="modal-pie" style="justify-content:center">
+    <a class="btn btn-secundario" id="exito-imprimir" target="_blank" rel="noopener">{{ icono('imprimir') }} Imprimir comprobante</a>
+    <button type="button" class="btn btn-primario" data-cerrar-modal autofocus>Nueva venta</button>
+  </footer>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/pos.js') }}"></script>{% endblock %}

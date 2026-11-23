@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Clientes{% endblock %}
+{% block ruta %}Ventas y dispensación{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Clientes</h1>
+    <p>Registro de clientes con autorización de tratamiento de datos (Ley 1581 de 2012).</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('clientes.editar') %}
+    <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nuevo cliente</button>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">
+      {{ icono('buscar') }}
+      <input class="control" type="search" id="f-buscar" placeholder="Buscar por documento, nombre o teléfono">
+    </div>
+    <select class="control" id="f-activo" aria-label="Estado">
+      <option value="">Todos</option>
+      <option value="1" selected>Activos</option>
+      <option value="0">Inactivos</option>
+    </select>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Documento</th>
+          <th>Cliente</th>
+          <th>Contacto</th>
+          <th class="num">Compras</th>
+          <th class="num">Total comprado</th>
+          <th>Última compra</th>
+          <th>Datos</th>
+          <th class="num">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+
+{% include '_modal_cliente.html' %}
+
+<dialog class="modal grande" id="modal-detalle" aria-labelledby="titulo-detalle">
+  {{ modal_cabecera('Cliente', '', 'titulo-detalle') }}
+  <div class="modal-cuerpo" id="detalle-cuerpo"></div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/clientes.js') }}"></script>{% endblock %}

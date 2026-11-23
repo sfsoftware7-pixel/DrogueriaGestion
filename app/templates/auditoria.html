@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Auditoría{% endblock %}
+{% block ruta %}Administración{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Auditoría del sistema</h1>
+    <p>Trazabilidad de inicios de sesión y operaciones realizadas por los usuarios.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="btn-exportar">{{ icono('descargar') }} Exportar CSV</button>
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">{{ icono('buscar') }}<input class="control" type="search" id="f-buscar" placeholder="Descripción o usuario"></div>
+    <select class="control" id="f-modulo" aria-label="Módulo"><option value="">Todos los módulos</option></select>
+    <select class="control" id="f-accion" aria-label="Acción"><option value="">Todas las acciones</option></select>
+    <input class="control" type="date" id="f-desde" aria-label="Desde">
+    <input class="control" type="date" id="f-hasta" aria-label="Hasta">
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Módulo</th><th>Descripción</th><th>IP</th></tr></thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/auditoria.js') }}"></script>{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block titulo %}Seguir mi pedido{% endblock %}
+{% block cabeza %}
+  <script type="module" src="{{ url_for('static', filename='js/seguimiento.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+<section class="seccion consulta" aria-labelledby="titulo-consulta">
+  <div class="wrap">
+    <div class="cabeza">
+      <h1 id="titulo-consulta">Seguir mi pedido</h1>
+      <p class="cabeza__lado">Escribe el código del pedido y el documento con el que compraste para ver su estado y descargar el recibo.</p>
+    </div>
+    <form class="form-pago form-consulta" id="form-consulta" novalidate>
+      <div class="errores-pago" id="error-consulta" role="alert" tabindex="-1" hidden></div>
+      <div class="campos">
+        <div class="campo campo--ancho">
+          <label for="codigo">Código del pedido</label>
+          <input id="codigo" name="codigo" value="{{ codigo }}" placeholder="PED-000123" maxlength="20" autocomplete="off" required>
+        </div>
+        <div class="campo">
+          <label for="tipo_documento">Tipo de documento</label>
+          <select id="tipo_documento" name="tipo_documento">
+            <option value="CC">Cédula de ciudadanía</option>
+            <option value="CE">Cédula de extranjería</option>
+            <option value="TI">Tarjeta de identidad</option>
+            <option value="PA">Pasaporte</option>
+            <option value="PPT">Permiso por protección temporal</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="numero_documento">Número de documento</label>
+          <input id="numero_documento" name="numero_documento" inputmode="numeric" maxlength="20" autocomplete="off" required>
+        </div>
+      </div>
+      <button class="btn btn--primary" type="submit">Ver mi pedido</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

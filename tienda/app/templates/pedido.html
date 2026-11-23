@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block titulo %}Pedido {{ pedido.codigo }}{% endblock %}
+{% block cabeza %}
+  {#- jsPDF 4.2.1 (MIT), copia local: genera el recibo en el navegador con los datos del pedido guardado #}
+  <script src="{{ url_for('static', filename='vendor/jspdf/jspdf.umd.min.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='js/pedido.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+<section class="seccion pedido" aria-labelledby="titulo-pedido">
+  <div class="wrap">
+    <div class="pedido__cabeza">
+      <p class="t-label">Pedido {{ pedido.codigo }}</p>
+      <h1 id="titulo-pedido">
+        {%- if pedido.estado == 'PENDIENTE_FORMULA' %}Recibimos tu pedido: falta aprobar la fórmula
+        {%- elif pedido.estado == 'ENTREGADO' %}Tu pedido fue entregado
+        {%- elif pedido.estado == 'CANCELADO' %}Pedido cancelado
+        {%- else %}Recibimos tu pedido{% endif -%}
+      </h1>
+      <p class="pedido__lead">
+        {% if pedido.estado == 'PENDIENTE_FORMULA' %}Un farmacéutico revisa tu fórmula médica; cuando la apruebe preparamos el pedido.
+        {% elif pedido.estado in ('ENTREGADO', 'CANCELADO') %}Aquí tienes el detalle y el comprobante de compra.
+        {% elif pedido.tipo_entrega == 'DOMICILIO' %}Lo llevamos a {{ pedido.direccion_entrega }}. Pagas al recibirlo.
+        {% else %}Lo retiras en {{ pedido.sede.nombre }}. Pagas al retirarlo.{% endif %}
+      </p>
+      <div class="pedido__acciones">
+        <button class="btn btn--primary" type="button" id="descargar-recibo">Descargar recibo (PDF)</button>
+        <button class="btn btn--secondary" type="button" id="imprimir-recibo">Imprimir</button>
+      </div>
+      <p class="pedido__aviso" id="aviso-recibo" role="status"></p>
+    </div>
+
+    <div class="pedido__fila">
+      <article class="recibo" id="recibo" aria-labelledby="titulo-recibo">
+        <header class="recibo__cabeza">
+          <div class="recibo__marca">
+            <span class="mark" data-mark="arc" aria-hidden="true"></span>
+            <div>
+              <p class="recibo__nombre">{{ pedido.drogueria.nombre }}</p>
+              <p class="recibo__dato">{{ pedido.drogueria.razon_social }} · NIT {{ pedido.drogueria.nit }}</p>
+              <p class="recibo__dato">{{ pedido.drogueria.direccion }}</p>
+            </div>
+          </div>
+          <h2 class="recibo__titulo" id="titulo-recibo">Comprobante de compra</h2>
+        </header>
+
+        <dl class="recibo__datos">
+          <div><dt>Pedido</dt><dd>{{ pedido.codigo }}</dd></div>
+          <div><dt>Fecha y hora</dt><dd>{{ pedido.fecha_texto }}</dd></div>
+          <div><dt>Cliente</dt><dd>{{ pedido.cliente.nombre }} · {{ pedido.cliente.documento }}</dd></div>
+          {% if pedido.tipo_entrega == 'DOMICILIO' %}
+          <div><dt>Dirección de entrega</dt><dd>{{ pedido.direccion_entrega }}</dd></div>
+          {% else %}
+          <div><dt>Retiro en sede</dt><dd>{{ pedido.sede.nombre }} · {{ pedido.sede.direccion }}</dd></div>
+          {% endif %}
+          <div><dt>Método de pago</dt><dd>{{ pedido.metodo_pago }}</dd></div>
+        </dl>
+
+        <table class="recibo__tabla">
+          <caption class="solo-lectores">Productos del pedido {{ pedido.codigo }}</caption>
+          <thead>
+            <tr><th scope="col">Producto</th><th scope="col" class="num">Cantidad</th><th scope="col" class="num">Precio unitario</th><th scope="col" class="num">Subtotal</th></tr>
+          </thead>
+          <tbody>
+            {#- pedido['items'] y no pedido.items: en Jinja, .items sería el método items() del diccionario #}
+            {% for item in pedido['items'] %}
+            <tr>
+              <td>{{ item.nombre }}<span class="recibo__presentacion">{{ item.presentacion }}{% if item.requiere_formula %} · Con fórmula médica{% endif %}</span></td>
+              <td class="num">{{ item.cantidad }}</td>
+              <td class="num">{{ item.precio_unitario|pesos }}</td>
+              <td class="num">{{ item.subtotal|pesos }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <dl class="recibo__totales">
+          <div><dt>Subtotal</dt><dd>{{ pedido.subtotal|pesos }}</dd></div>
+          <div><dt>Descuentos</dt><dd>{% if pedido.descuento %}-{{ pedido.descuento|pesos }}{% else %}{{ 0|pesos }}{% endif %}</dd></div>
+          <div><dt>Domicilio</dt><dd>{% if pedido.tipo_entrega == 'DOMICILIO' %}{{ pedido.costo_envio|pesos }}{% else %}Sin costo (retiro en sede){% endif %}</dd></div>
+          <div class="recibo__total"><dt>Total</dt><dd>{{ pedido.total|pesos }}</dd></div>
+        </dl>
+      </article>
+
+      <aside class="seguimiento" aria-labelledby="titulo-seguimiento">
+        <h2 class="seguimiento__titulo" id="titulo-seguimiento">Estado del pedido</h2>
+        <p class="seguimiento__actual">{{ pedido.estado_texto }}</p>
+        <ol class="pasos">
+          {% for paso in pedido.pasos %}
+          <li class="paso{% if paso.hecho %} paso--hecho{% endif %}{% if paso.actual %} paso--actual{% endif %}"{% if paso.actual %} aria-current="step"{% endif %}>
+            <span class="paso__texto">{{ paso.texto }}</span>
+            <span class="paso__fecha">{% if paso.fecha_texto %}{{ paso.fecha_texto }}{% elif not paso.hecho %}Pendiente{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ol>
+        <p class="seguimiento__nota">Guarda el código <strong>{{ pedido.codigo }}</strong>: con él y tu documento consultas el estado en <a href="{{ url_for('pagina_seguimiento') }}">Seguir mi pedido</a>.</p>
+      </aside>
+    </div>
+  </div>
+  {#- Datos del pedido confirmado (MySQL) para el PDF; no es un script ejecutable #}
+  <script type="application/json" id="datos-pedido">{{ pedido|tojson }}</script>
+</section>
+{% endblock %}

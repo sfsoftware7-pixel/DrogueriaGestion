@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Mi perfil{% endblock %}
+{% block ruta %}Cuenta{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Mi perfil</h1>
+    <p>Información de su cuenta y cambio de contraseña.</p>
+  </div>
+</div>
+
+<div class="rejilla rejilla-2" style="max-width:1000px">
+  <section class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Datos de la cuenta</h2></div></header>
+    <div class="tarjeta-cuerpo">
+      <div class="flex" style="gap:14px;margin-bottom:18px">
+        <div class="avatar" style="width:52px;height:52px;font-size:18px">{{ usuario_actual.nombres[:1] }}{{ usuario_actual.apellidos[:1] }}</div>
+        <div>
+          <strong style="font-size:16px">{{ usuario_actual.nombres }} {{ usuario_actual.apellidos }}</strong>
+          <div><span class="insignia insignia-marca sin-punto">{{ usuario_actual.rol }}</span></div>
+        </div>
+      </div>
+      <dl class="detalle-lista">
+        <div><dt>Usuario</dt><dd class="mono">{{ usuario_actual.usuario }}</dd></div>
+        <div><dt>Correo</dt><dd>{{ usuario_actual.email }}</dd></div>
+      </dl>
+      <h3 class="mt-3" style="font-size:13px">Permisos de su rol</h3>
+      <div class="flex mt-1" style="flex-wrap:wrap">
+        {% for p in permisos_usuario %}<span class="insignia insignia-neutro sin-punto">{{ p }}</span>{% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <header class="tarjeta-cabecera"><div><h2>Cambiar contraseña</h2><p>Las contraseñas se almacenan cifradas (scrypt)</p></div>{{ icono('llave') }}</header>
+    <form id="form-password" novalidate>
+      <div class="tarjeta-cuerpo" style="display:grid;gap:14px">
+        <div class="campo">
+          <label for="p-actual">Contraseña actual</label>
+          <input id="p-actual" name="actual" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="campo">
+          <label for="p-nueva">Nueva contraseña</label>
+          <input id="p-nueva" name="nueva" type="password" autocomplete="new-password" required>
+          <span class="ayuda">Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo.</span>
+        </div>
+        <div class="campo">
+          <label for="p-confirmacion">Confirmar nueva contraseña</label>
+          <input id="p-confirmacion" name="confirmacion" type="password" autocomplete="new-password" required>
+        </div>
+        <button class="btn btn-primario" type="submit" id="btn-cambiar">Actualizar contraseña</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/perfil.js') }}"></script>{% endblock %}

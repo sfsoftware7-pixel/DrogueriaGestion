@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Análisis ABC{% endblock %}
+{% block ruta %}Análisis{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Análisis ABC (Pareto)</h1>
+    <p>Clasifica los medicamentos vendidos por su aporte al total: <strong>A</strong> hasta el 80 % del valor, <strong>B</strong> hasta el 95 %, <strong>C</strong> el resto. Calculado en MySQL con CTE y funciones de ventana.</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('consultas.ver') %}<button class="btn btn-secundario" type="button" data-ver-sql="analisis.abc">{{ icono('documento') }} Ver SQL</button>{% endif %}
+    <button class="btn btn-secundario" type="button" id="abc-csv">{{ icono('descargar') }} CSV</button>
+    <button class="btn btn-secundario" type="button" id="abc-imprimir">{{ icono('imprimir') }} Imprimir</button>
+  </div>
+</div>
+
+<section class="tarjeta mb no-imprimir">
+  <div class="filtros" style="border-bottom:none">
+    <span class="etiqueta">Periodo:</span>
+    <input class="control" type="date" id="abc-desde" aria-label="Desde">
+    <input class="control" type="date" id="abc-hasta" aria-label="Hasta">
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="29">30 días</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="mes">Este mes</button>
+    <button class="btn btn-secundario btn-sm" type="button" data-rango="89">90 días</button>
+  </div>
+</section>
+
+<section class="rejilla rejilla-4 mb">
+  <article class="tarjeta kpi"><div class="kpi-icono exito"><span class="abc-letra">A</span></div><div><div class="kpi-etiqueta">Clase A</div><div class="kpi-valor" id="k-a">–</div><div class="kpi-detalle" id="k-a-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono alerta"><span class="abc-letra">B</span></div><div><div class="kpi-etiqueta">Clase B</div><div class="kpi-valor" id="k-b">–</div><div class="kpi-detalle" id="k-b-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono info"><span class="abc-letra">C</span></div><div><div class="kpi-etiqueta">Clase C</div><div class="kpi-valor" id="k-c">–</div><div class="kpi-detalle" id="k-c-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono marca" id="k-control-icono">{{ icono('check-circulo') }}</div><div><div class="kpi-etiqueta">Total del periodo</div><div class="kpi-valor" id="k-total">–</div><div class="kpi-detalle" id="k-control">&nbsp;</div></div></article>
+</section>
+
+<section class="tarjeta mb">
+  <header class="tarjeta-cabecera"><div><h2>Curva de Pareto</h2><p>Barras: valor vendido por medicamento · línea: porcentaje acumulado</p></div>
+    <div class="leyenda"><span><i class="pareto-a-muestra"></i>A</span><span><i class="pareto-b-muestra"></i>B</span><span><i class="pareto-c-muestra"></i>C</span></div></header>
+  <div class="tarjeta-cuerpo"><div id="g-pareto" style="min-height:300px"></div></div>
+</section>
+
+<section class="tarjeta">
+  <header class="tarjeta-cabecera"><div><h2>Clasificación por medicamento</h2><p>Ordenado con RANK() OVER (ORDER BY total DESC)</p></div></header>
+  <div class="tabla-contenedor"><table class="tabla tabla-compacta">
+    <thead><tr><th class="num">#</th><th>Medicamento</th><th>Categoría</th><th class="num">Unidades</th><th class="num">Total</th><th class="num">%</th><th class="num">% acumulado</th><th>Clase</th></tr></thead>
+    <tbody id="t-abc"></tbody>
+  </table></div>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/analisis_abc.js') }}"></script>{% endblock %}

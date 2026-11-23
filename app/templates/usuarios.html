@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Usuarios y roles{% endblock %}
+{% block ruta %}Administración{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Usuarios y roles</h1>
+    <p>Personas autorizadas para ingresar al sistema y los permisos de cada cargo.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nuevo usuario</button>
+  </div>
+</div>
+
+<section class="rejilla rejilla-4 mb" id="roles"></section>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">{{ icono('buscar') }}<input class="control" type="search" id="f-buscar" placeholder="Nombre, usuario o documento"></div>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead><tr>
+        <th>Usuario</th><th>Nombre</th><th>Rol</th><th>Correo</th><th>Último acceso</th><th>Estado</th><th class="num">Acciones</th>
+      </tr></thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+</section>
+
+<dialog class="modal" id="modal-usuario" aria-labelledby="titulo-usuario">
+  <form id="form-usuario" novalidate autocomplete="off">
+    {{ modal_cabecera('Nuevo usuario', 'Los campos con * son obligatorios', 'titulo-usuario') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla">
+        <div class="campo">
+          <label for="u-nombres">Nombres <span class="req">*</span></label>
+          <input id="u-nombres" name="nombres" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="u-apellidos">Apellidos <span class="req">*</span></label>
+          <input id="u-apellidos" name="apellidos" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="u-documento">Documento <span class="req">*</span></label>
+          <input id="u-documento" name="documento" maxlength="20" inputmode="numeric" required>
+        </div>
+        <div class="campo">
+          <label for="u-email">Correo electrónico <span class="req">*</span></label>
+          <input id="u-email" name="email" type="email" maxlength="120" required>
+        </div>
+        <div class="campo">
+          <label for="u-usuario">Usuario <span class="req">*</span></label>
+          <input id="u-usuario" name="usuario" maxlength="40" required autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="u-rol">Rol <span class="req">*</span></label>
+          <select id="u-rol" name="id_rol" required></select>
+        </div>
+        <div class="campo ancho-total">
+          <label for="u-password">Contraseña <span class="req" id="password-req">*</span></label>
+          <input id="u-password" name="password" type="password" maxlength="64" autocomplete="new-password">
+          <span class="ayuda" id="password-ayuda">Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo.</span>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/usuarios.js') }}"></script>{% endblock %}

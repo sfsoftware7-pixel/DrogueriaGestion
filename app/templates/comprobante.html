@@ -1,0 +1,70 @@
+{% from '_macros.html' import icono %}
+{% set metodos = {'EFECTIVO': 'Efectivo', 'TARJETA_DEBITO': 'Tarjeta débito', 'TARJETA_CREDITO': 'Tarjeta crédito', 'TRANSFERENCIA': 'Transferencia'} %}
+{% macro pesos(valor) %}${{ '{:,.0f}'.format(valor or 0).replace(',', '.') }}{% endmacro %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comprobante {{ venta.numero_factura }} · DrogueriaGestión</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
+</head>
+<body class="comprobante-pagina">
+{% include '_iconos.html' %}
+<div class="comprobante-acciones">
+  <button class="btn btn-primario" type="button" id="btn-imprimir">{{ icono('imprimir') }} Imprimir</button>
+  <a class="btn btn-secundario" href="{{ url_for('paginas.ventas') }}">Volver al historial</a>
+</div>
+
+<article class="comprobante">
+  <div class="centro">
+    <h1>{{ config.get('nombre_drogueria', 'Droguería') }}</h1>
+    <div>NIT {{ config.get('nit', '') }}</div>
+    <div>{{ config.get('direccion', '') }}</div>
+    {% if config.get('telefono') %}<div>Tel. {{ config.telefono }}</div>{% endif %}
+  </div>
+  <hr>
+  <div class="centro"><strong>DOCUMENTO DE VENTA {{ venta.numero_factura }}</strong></div>
+  {% if venta.estado == 'ANULADA' %}<div class="anulada">ANULADA</div>{% endif %}
+  <table>
+    <tr><td>Fecha:</td><td style="text-align:right">{{ venta.fecha_venta.strftime('%d/%m/%Y %I:%M %p') }}</td></tr>
+    <tr><td>Cliente:</td><td style="text-align:right">{{ venta.cliente }}</td></tr>
+    <tr><td>{{ venta.tipo_documento }}:</td><td style="text-align:right">{{ venta.numero_documento }}</td></tr>
+    <tr><td>Atendió:</td><td style="text-align:right">{{ venta.vendedor }}</td></tr>
+    {% if venta.formula_medica %}<tr><td>Fórmula:</td><td style="text-align:right">{{ venta.formula_medica }}</td></tr>{% endif %}
+  </table>
+  <hr>
+  <table>
+    {% for d in detalle %}
+    <tr><td colspan="2"><strong>{{ d.nombre }}</strong></td></tr>
+    <tr>
+      <td>{{ d.cantidad }} x {{ pesos(d.precio_unitario) }}{% if d.iva_porcentaje %} (IVA {{ d.iva_porcentaje|int }}%){% endif %}<br>
+        <small>Lote {{ d.numero_lote }} · Vence {{ d.fecha_vencimiento.strftime('%m/%Y') }}</small></td>
+      <td style="text-align:right">{{ pesos(d.subtotal) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <hr>
+  <table>
+    <tr><td>Subtotal</td><td style="text-align:right">{{ pesos(venta.subtotal) }}</td></tr>
+    <tr><td>IVA</td><td style="text-align:right">{{ pesos(venta.impuesto) }}</td></tr>
+    {% if venta.descuento %}<tr><td>Descuento</td><td style="text-align:right">-{{ pesos(venta.descuento) }}</td></tr>{% endif %}
+    <tr class="total-linea"><td>TOTAL</td><td style="text-align:right">{{ pesos(venta.total) }}</td></tr>
+    <tr><td>Pago</td><td style="text-align:right">{{ metodos[venta.metodo_pago] }}</td></tr>
+    {% if venta.metodo_pago == 'EFECTIVO' %}
+    <tr><td>Recibido</td><td style="text-align:right">{{ pesos(venta.monto_recibido) }}</td></tr>
+    <tr><td>Cambio</td><td style="text-align:right">{{ pesos(venta.cambio) }}</td></tr>
+    {% endif %}
+  </table>
+  <hr>
+  <div class="centro">
+    <div>Unidades: {{ venta.unidades }}</div>
+    <p style="margin-top:6px">{{ config.get('mensaje_factura', '') }}</p>
+    <p style="margin-top:6px;font-size:10px">Generado por DrogueriaGestión</p>
+  </div>
+</article>
+<script src="{{ url_for('static', filename='js/comprobante.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Medicamentos{% endblock %}
+{% block ruta %}Inventario{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Medicamentos</h1>
+    <p>Catálogo de productos con existencias calculadas a partir de los lotes vigentes.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="btn-exportar">{{ icono('descargar') }} Exportar CSV</button>
+    {% if puede('medicamentos.editar') %}
+    <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nuevo medicamento</button>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">
+      {{ icono('buscar') }}
+      <input class="control" type="search" id="f-buscar" placeholder="Buscar por nombre, principio activo, código o laboratorio">
+    </div>
+    <select class="control" id="f-categoria" aria-label="Categoría"><option value="">Todas las categorías</option></select>
+    <select class="control" id="f-stock" aria-label="Estado del stock">
+      <option value="">Todo el stock</option>
+      <option value="NORMAL">Stock normal</option>
+      <option value="BAJO">Stock bajo</option>
+      <option value="AGOTADO">Agotados</option>
+    </select>
+    <select class="control" id="f-activo" aria-label="Estado">
+      <option value="1">Activos</option>
+      <option value="0">Inactivos</option>
+      <option value="">Todos</option>
+    </select>
+    <select class="control" id="f-orden" aria-label="Ordenar por">
+      <option value="nombre">Ordenar: nombre</option>
+      <option value="stock">Ordenar: menor stock</option>
+      <option value="vencimiento">Ordenar: próximo vencimiento</option>
+      <option value="precio">Ordenar: mayor precio</option>
+    </select>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Medicamento</th>
+          <th>Categoría</th>
+          <th class="num">Precio venta</th>
+          <th class="num">Disponible</th>
+          <th>Próx. vencimiento</th>
+          <th>Estado</th>
+          <th class="num">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+
+<!-- Formulario de medicamento -->
+<dialog class="modal grande" id="modal-medicamento" aria-labelledby="titulo-medicamento">
+  <form id="form-medicamento" novalidate>
+    {{ modal_cabecera('Nuevo medicamento', 'Los campos con * son obligatorios', 'titulo-medicamento') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla tres">
+        <div class="separador-form" style="border-top:none;margin-top:0;padding-top:0">Identificación</div>
+        <div class="campo">
+          <label for="m-codigo">Código <span class="req">*</span></label>
+          <input id="m-codigo" name="codigo" maxlength="30" placeholder="7702605101234" required>
+        </div>
+        <div class="campo" style="grid-column: span 2">
+          <label for="m-nombre">Nombre comercial <span class="req">*</span></label>
+          <input id="m-nombre" name="nombre" maxlength="120" placeholder="Acetaminofén 500 mg" required>
+        </div>
+        <div class="campo" style="grid-column: span 2">
+          <label for="m-principio">Principio activo <span class="req">*</span></label>
+          <input id="m-principio" name="principio_activo" maxlength="150" required>
+        </div>
+        <div class="campo">
+          <label for="m-concentracion">Concentración</label>
+          <input id="m-concentracion" name="concentracion" maxlength="50" placeholder="500 mg">
+        </div>
+        <div class="campo">
+          <label for="m-forma">Forma farmacéutica <span class="req">*</span></label>
+          <select id="m-forma" name="forma_farmaceutica" required></select>
+        </div>
+        <div class="campo">
+          <label for="m-presentacion">Presentación</label>
+          <input id="m-presentacion" name="presentacion" maxlength="80" placeholder="Caja x 20 tabletas">
+        </div>
+        <div class="campo">
+          <label for="m-categoria">Categoría terapéutica <span class="req">*</span></label>
+          <select id="m-categoria" name="id_categoria" required></select>
+        </div>
+        <div class="campo">
+          <label for="m-laboratorio">Laboratorio</label>
+          <input id="m-laboratorio" name="laboratorio" maxlength="100">
+        </div>
+        <div class="campo">
+          <label for="m-invima">Registro INVIMA</label>
+          <input id="m-invima" name="registro_invima" maxlength="40" placeholder="INVIMA 2020M-0012345">
+        </div>
+        <div class="campo">
+          <label for="m-ubicacion">Ubicación</label>
+          <input id="m-ubicacion" name="ubicacion" maxlength="40" placeholder="Estante A1">
+        </div>
+
+        <div class="separador-form">Precios e inventario</div>
+        <div class="campo">
+          <label for="m-compra">Precio de compra <span class="req">*</span></label>
+          <input id="m-compra" name="precio_compra" type="number" min="0" step="50" required>
+        </div>
+        <div class="campo">
+          <label for="m-venta">Precio de venta (sin IVA) <span class="req">*</span></label>
+          <input id="m-venta" name="precio_venta" type="number" min="1" step="50" required>
+          <span class="ayuda" id="m-margen">&nbsp;</span>
+        </div>
+        <div class="campo">
+          <label for="m-iva">IVA</label>
+          <select id="m-iva" name="iva_porcentaje">
+            <option value="0">0 % (excluido)</option>
+            <option value="5">5 %</option>
+            <option value="19">19 %</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="m-minimo">Stock mínimo <span class="req">*</span></label>
+          <input id="m-minimo" name="stock_minimo" type="number" min="0" step="1" value="10" required>
+          <span class="ayuda">Bajo este valor se genera alerta</span>
+        </div>
+        <div class="campo" style="grid-column: span 2; justify-content:center; gap:10px">
+          <label class="check"><input type="checkbox" name="requiere_formula">
+            <span>Requiere fórmula médica<small>Se exigirá el número de fórmula al vender</small></span></label>
+          <label class="check"><input type="checkbox" name="es_controlado">
+            <span>Medicamento de control especial<small>Implica fórmula médica obligatoria</small></span></label>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- Detalle de medicamento -->
+<dialog class="modal grande" id="modal-detalle" aria-labelledby="titulo-detalle">
+  {{ modal_cabecera('Detalle del medicamento', '', 'titulo-detalle') }}
+  <div class="modal-cuerpo" id="detalle-cuerpo"></div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/medicamentos.js') }}"></script>{% endblock %}

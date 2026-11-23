@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Configuración{% endblock %}
+{% block ruta %}Administración{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Configuración</h1>
+    <p>Datos del establecimiento que aparecen en los comprobantes de venta.</p>
+  </div>
+</div>
+
+<section class="tarjeta" style="max-width:820px">
+  <header class="tarjeta-cabecera"><div><h2>Datos de la droguería</h2></div>{{ icono('tienda') }}</header>
+  <form id="form-config" novalidate>
+    <div class="tarjeta-cuerpo formulario-rejilla">
+      <div class="campo ancho-total">
+        <label for="cf-nombre">Nombre comercial <span class="req">*</span></label>
+        <input id="cf-nombre" name="nombre_drogueria" maxlength="100" required>
+      </div>
+      <div class="campo">
+        <label for="cf-nit">NIT <span class="req">*</span></label>
+        <input id="cf-nit" name="nit" maxlength="30" required>
+      </div>
+      <div class="campo">
+        <label for="cf-telefono">Teléfono</label>
+        <input id="cf-telefono" name="telefono" maxlength="30">
+      </div>
+      <div class="campo ancho-total">
+        <label for="cf-direccion">Dirección <span class="req">*</span></label>
+        <input id="cf-direccion" name="direccion" maxlength="150" required>
+      </div>
+      <div class="campo ancho-total">
+        <label for="cf-email">Correo electrónico</label>
+        <input id="cf-email" name="email" type="email" maxlength="120">
+      </div>
+      <div class="campo ancho-total">
+        <label for="cf-mensaje">Mensaje al pie del comprobante</label>
+        <textarea id="cf-mensaje" name="mensaje_factura" maxlength="200"></textarea>
+      </div>
+      <div class="campo">
+        <label for="cf-descuento">Descuento máximo del vendedor (%) <span class="req">*</span></label>
+        <input id="cf-descuento" name="descuento_maximo_vendedor" type="number" min="0" max="100" step="0.5" required>
+        <span class="ayuda">Tope por venta para el rol Vendedor. Regente y administrador no tienen límite.</span>
+      </div>
+    </div>
+    <footer class="modal-pie" style="border-radius:0 0 var(--radio) var(--radio)">
+      <button type="submit" class="btn btn-primario" id="btn-guardar">{{ icono('check') }} Guardar cambios</button>
+    </footer>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/configuracion.js') }}"></script>{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Historial de ventas{% endblock %}
+{% block ruta %}Ventas y dispensación{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Historial de ventas</h1>
+    <p>Consulte, reimprima o anule ventas. Las anulaciones restituyen el inventario al lote de origen.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="btn-exportar">{{ icono('descargar') }} Exportar CSV</button>
+    {% if puede('ventas.crear') %}
+    <a class="btn btn-primario" href="{{ url_for('paginas.nueva_venta') }}">{{ icono('carrito') }} Nueva venta</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">
+      {{ icono('buscar') }}
+      <input class="control" type="search" id="f-buscar" placeholder="Factura, cliente o documento">
+    </div>
+    <input class="control" type="date" id="f-desde" aria-label="Desde">
+    <input class="control" type="date" id="f-hasta" aria-label="Hasta">
+    <select class="control" id="f-estado" aria-label="Estado">
+      <option value="">Todos los estados</option>
+      <option value="COMPLETADA">Completadas</option>
+      <option value="ANULADA">Anuladas</option>
+    </select>
+    <select class="control" id="f-metodo" aria-label="Método de pago">
+      <option value="">Todos los pagos</option>
+      <option value="EFECTIVO">Efectivo</option>
+      <option value="TARJETA_DEBITO">Tarjeta débito</option>
+      <option value="TARJETA_CREDITO">Tarjeta crédito</option>
+      <option value="TRANSFERENCIA">Transferencia</option>
+    </select>
+    <span class="crecer"></span>
+    <span class="texto-2" id="resumen-filtro" style="font-size:13px"></span>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Factura</th>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Vendedor</th>
+          <th>Pago</th>
+          <th class="num">Unidades</th>
+          <th class="num">Total</th>
+          <th>Estado</th>
+          <th class="num">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+
+<dialog class="modal grande" id="modal-detalle" aria-labelledby="titulo-detalle">
+  {{ modal_cabecera('Detalle de la venta', '', 'titulo-detalle') }}
+  <div class="modal-cuerpo" id="detalle-cuerpo"></div>
+  <footer class="modal-pie" id="detalle-pie"></footer>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/ventas.js') }}"></script>{% endblock %}

@@ -1,0 +1,91 @@
+{
+ "note": "Credits for the photographs in this folder: photos.mjs credits prints the footer block for the ones the pages use.",
+ "photos": [
+  {
+   "file": "photo-f109329026-1280.jpg",
+   "files": [
+    "photo-f109329026-500.jpg",
+    "photo-f109329026-960.jpg",
+    "photo-f109329026-1280.jpg"
+   ],
+   "id": "f109329026",
+   "alt": "Carrollton New Orleans 26 August 2021 - Castellon Pharmacy Aisle",
+   "by": "Infrogmation of New Orleans",
+   "licence": "CC BY-SA 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Carrollton_New_Orleans_26_August_2021_-_Castellon_Pharmacy_Aisle.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f120365151.jpg",
+   "files": [
+    "photo-f120365151-500.jpg",
+    "photo-f120365151-960.jpg",
+    "photo-f120365151.jpg"
+   ],
+   "id": "f120365151",
+   "alt": "Signing for a parcel delivery on a phone",
+   "by": "Meanwell Packaging",
+   "licence": "CC BY 2.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Signing_for_a_parcel_delivery_on_a_phone.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f163282572-500.jpg",
+   "files": [
+    "photo-f163282572-500.jpg"
+   ],
+   "id": "f163282572",
+   "alt": "Interior of Sunlight Pharmacy, 105 Richmond Road, Gillingham ME71LX - Medway",
+   "by": "Sunolafjagtenben-hur",
+   "licence": "CC0",
+   "licenceUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "page": "https://commons.wikimedia.org/wiki/File:Interior_of_Sunlight_Pharmacy,_105_Richmond_Road,_Gillingham_ME71LX_-_Medway.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f1729055-960.jpg",
+   "files": [
+    "photo-f1729055-500.jpg",
+    "photo-f1729055-960.jpg"
+   ],
+   "id": "f1729055",
+   "alt": "Hospital Pharmacy",
+   "by": "User:Mattes",
+   "licence": "Public domain",
+   "licenceUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "page": "https://commons.wikimedia.org/wiki/File:Hospital_Pharmacy.JPG",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f65717909.jpg",
+   "files": [
+    "photo-f65717909-500.jpg",
+    "photo-f65717909-960.jpg",
+    "photo-f65717909.jpg"
+   ],
+   "id": "f65717909",
+   "alt": "Pills and medicines 02",
+   "by": "BuhaM",
+   "licence": "CC BY-SA 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Pills_and_medicines_02.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f177726226-960.jpg",
+   "files": [
+    "photo-f177726226-500.jpg",
+    "photo-f177726226-960.jpg"
+   ],
+   "id": "f177726226",
+   "alt": "Former pharmacy, shelves with medicines",
+   "by": "Zalasem1",
+   "licence": "CC BY 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Former_pharmacy,_shelves_with_medicines.jpg",
+   "source": "Wikimedia Commons"
+  }
+ ]
+}

@@ -1,0 +1,107 @@
+# =====================================================================
+#  Datos de la droguería: un solo archivo para editar horarios, zonas de
+#  domicilio, costos de envío y contacto. Lo leen el recibo PDF, el
+#  chatbot, la página de pago y el seguimiento del pedido.
+#
+#  Los cambios se aplican sin reiniciar el servidor (se relee al guardar).
+#  Todo lo marcado «EJEMPLO» es ficticio: reemplácelo por el dato real
+#  antes de publicar la tienda.
+# =====================================================================
+
+[drogueria]
+nombre = "Sanalivio"
+razon_social = "Sanalivio S.A.S."          # EJEMPLO
+nit = "000.000.000-0"                      # EJEMPLO
+direccion = "Calle 00 # 00-00, Bogotá D.C." # EJEMPLO
+ciudad = "Bogotá D.C."
+zona_horaria = "America/Bogota"
+
+[contacto]
+# Persona a quien remite el chatbot cuando no entiende la pregunta o le preguntan por dosis o síntomas
+telefono = "601 000 0000"                  # EJEMPLO
+correo = "atencion@sanalivio.example"      # EJEMPLO
+atiende = "un farmacéutico"
+
+# Horario de atención de la tienda en línea, los domicilios y la línea de contacto.
+# Formato 24 horas "HH:MM". Para un día sin atención: cerrado = true
+[horario]
+lunes     = { abre = "07:00", cierra = "21:00" }  # EJEMPLO
+martes    = { abre = "07:00", cierra = "21:00" }  # EJEMPLO
+miercoles = { abre = "07:00", cierra = "21:00" }  # EJEMPLO
+jueves    = { abre = "07:00", cierra = "21:00" }  # EJEMPLO
+viernes   = { abre = "07:00", cierra = "21:00" }  # EJEMPLO
+sabado    = { abre = "08:00", cierra = "20:00" }  # EJEMPLO
+domingo   = { abre = "08:00", cierra = "14:00" }  # EJEMPLO
+
+[pago]
+# Único método activo: no hay pasarela de pago en línea
+metodo = "CONTRA_ENTREGA"
+nombre = "Contra entrega"
+descripcion = "Pagas al recibir el pedido o al retirarlo en la sede."
+
+# Zonas con cobertura de domicilio. Un barrio que no aparezca aquí no tiene cobertura.
+#   ciudad_dane: código DANE de la ciudad (tabla ciudades de MySQL)
+#   sede_id: sede que despacha (tabla sedes de MySQL); su inventario es el que se descuenta
+#   costo: pesos colombianos, IVA incluido
+[[domicilio.zonas]]
+ciudad = "Bogotá D.C."
+ciudad_dane = "11001"
+sede_id = 1
+nombre = "Chapinero"
+barrios = ["Chapinero Central", "Chapinero Alto", "Quinta Camacho", "Rosales", "Marly", "Pardo Rubio"]
+costo = 4900                     # EJEMPLO
+tiempo = "30 a 45 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Bogotá D.C."
+ciudad_dane = "11001"
+sede_id = 1
+nombre = "Teusaquillo"
+barrios = ["Teusaquillo", "Galerías", "La Soledad", "Palermo", "Park Way"]
+costo = 6900                     # EJEMPLO
+tiempo = "45 a 60 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Bogotá D.C."
+ciudad_dane = "11001"
+sede_id = 1
+nombre = "Usaquén"
+barrios = ["Usaquén", "Santa Bárbara", "Cedritos", "Santa Ana"]
+costo = 8900                     # EJEMPLO
+tiempo = "60 a 90 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Medellín"
+ciudad_dane = "05001"
+sede_id = 2
+nombre = "El Poblado"
+barrios = ["El Poblado", "Provenza", "Manila", "Astorga", "Lalinde"]
+costo = 5900                     # EJEMPLO
+tiempo = "30 a 45 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Medellín"
+ciudad_dane = "05001"
+sede_id = 2
+nombre = "Laureles"
+barrios = ["Laureles", "Estadio", "Conquistadores", "Carlos E. Restrepo"]
+costo = 7900                     # EJEMPLO
+tiempo = "45 a 60 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Cali"
+ciudad_dane = "76001"
+sede_id = 3
+nombre = "Granada"
+barrios = ["Granada", "Juanambú", "Versalles", "Santa Mónica", "El Peñón"]
+costo = 5900                     # EJEMPLO
+tiempo = "30 a 45 minutos"       # EJEMPLO
+
+[[domicilio.zonas]]
+ciudad = "Cali"
+ciudad_dane = "76001"
+sede_id = 3
+nombre = "San Fernando"
+barrios = ["San Fernando", "El Lido", "Miraflores", "Tequendama"]
+costo = 7900                     # EJEMPLO
+tiempo = "45 a 60 minutos"       # EJEMPLO

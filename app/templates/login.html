@@ -1,0 +1,77 @@
+{% from '_macros.html' import icono %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Iniciar sesión · DrogueriaGestión</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
+</head>
+<body>
+{% include '_iconos.html' %}
+<div class="login">
+  <section class="login-panel">
+    <div class="flex" style="gap:12px">
+      <div class="marca-logo"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""></div>
+      <div>
+        <div class="marca-nombre">DrogueriaGestión</div>
+        <div class="marca-sub">Villavicencio Social e Innovadora</div>
+      </div>
+    </div>
+
+    <div>
+      <h1>La gestión de su droguería, <em>en un solo lugar.</em></h1>
+      <p>Controle medicamentos, lotes y fechas de vencimiento, dispense con trazabilidad y tome decisiones con reportes en tiempo real.</p>
+      <ul class="login-beneficios">
+        <li><span class="icono-burbuja">{{ icono('calendario') }}</span>Alertas de vencimiento y dispensación por lote (FEFO)</li>
+        <li><span class="icono-burbuja">{{ icono('caja') }}</span>Inventario con kárdex de entradas, ventas y ajustes</li>
+        <li><span class="icono-burbuja">{{ icono('escudo') }}</span>Acceso por roles, contraseñas cifradas y auditoría</li>
+      </ul>
+    </div>
+
+    <div class="login-pie">Proyecto de aula · Tecnología en Desarrollo de Software · UNIMINUTO</div>
+  </section>
+
+  <section class="login-formulario">
+    <div class="login-caja">
+      <h2>Iniciar sesión</h2>
+      <p>Ingrese sus credenciales para continuar.</p>
+
+      <form id="form-login" novalidate data-siguiente="{{ siguiente }}">
+        <div class="campo">
+          <label for="usuario">Usuario</label>
+          <div class="entrada-icono">
+            {{ icono('usuario') }}
+            <input class="control" id="usuario" name="usuario" autocomplete="username" required maxlength="40" autofocus>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="password">Contraseña</label>
+          <div class="entrada-icono">
+            {{ icono('candado') }}
+            <input class="control" id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+            <button type="button" class="btn-icono ver-password" id="ver-password" aria-label="Mostrar contraseña">{{ icono('ojo') }}</button>
+          </div>
+        </div>
+        <div class="aviso peligro mt-1" id="login-error" hidden role="alert"></div>
+        <button class="btn btn-primario btn-lg btn-bloque mt-2" type="submit" id="btn-ingresar">Ingresar</button>
+      </form>
+
+      <div class="demo-cuentas">
+        <strong>Cuentas de demostración</strong> (las contraseñas están en el README):
+        <div class="flex">
+          <span class="insignia insignia-marca sin-punto">admin</span>
+          <span class="insignia insignia-info sin-punto">regente</span>
+          <span class="insignia insignia-alerta sin-punto">vendedor</span>
+          <span class="insignia insignia-neutro sin-punto">bodega</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script type="module" src="{{ url_for('static', filename='js/pages/login.js') }}"></script>
+</body>
+</html>

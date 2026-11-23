@@ -1,0 +1,29 @@
+<!doctype html>
+{#- Páginas de compra (carrito, pedido, seguimiento): mismo encabezado, pie, estilos y chatbot que el inicio #}
+<html lang="es-CO" data-type="place" data-radius="soft" data-buttons="solid" data-motion>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block titulo %}{% endblock %} · {{ marca }}</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f3f3ee">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/taste/motion/motion.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+  {% block cabeza %}{% endblock %}
+  <script type="module" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='vendor/taste/motion/motion.js') }}"></script>
+</head>
+<body>
+  {% include '_encabezado.html' %}
+
+  <main id="contenido" tabindex="-1">
+    {% block contenido %}{% endblock %}
+  </main>
+
+  {% include '_pie.html' %}
+</body>
+</html>

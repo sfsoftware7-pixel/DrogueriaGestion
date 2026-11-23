@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Modelo de datos{% endblock %}
+{% block ruta %}Administración{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Modelo de datos en vivo</h1>
+    <p id="m-subtitulo">Diagrama entidad-relación leído de <span class="mono">information_schema</span>. Haga clic en una tabla para ver su diccionario de datos.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="m-csv">{{ icono('descargar') }} Exportar diccionario (CSV)</button>
+  </div>
+</div>
+
+<section class="rejilla rejilla-4 mb">
+  <article class="tarjeta kpi"><div class="kpi-icono marca">{{ icono('caja') }}</div><div><div class="kpi-etiqueta">Tablas</div><div class="kpi-valor" id="k-tablas">–</div><div class="kpi-detalle" id="k-tablas-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono info">{{ icono('llave') }}</div><div><div class="kpi-etiqueta">Llaves foráneas</div><div class="kpi-valor" id="k-fk">–</div><div class="kpi-detalle">Relaciones 1:N</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono alerta">{{ icono('buscar') }}</div><div><div class="kpi-etiqueta">Índices</div><div class="kpi-valor" id="k-indices">–</div><div class="kpi-detalle" id="k-indices-d">&nbsp;</div></div></article>
+  <article class="tarjeta kpi"><div class="kpi-icono exito">{{ icono('documento') }}</div><div><div class="kpi-etiqueta">Filas en total</div><div class="kpi-valor" id="k-filas">–</div><div class="kpi-detalle">Contadas con COUNT(*)</div></div></article>
+</section>
+
+<section class="tarjeta mb">
+  <header class="tarjeta-cabecera">
+    <div><h2>Diagrama entidad-relación</h2><p>Tablas agrupadas por área · se muestran la llave primaria y las foráneas</p></div>
+    <div class="leyenda er-leyenda">
+      <span><b class="er-marca er-marca-pk">PK</b> Llave primaria</span>
+      <span><b class="er-marca er-marca-fk">FK</b> Llave foránea</span>
+      <span><b class="er-cardinalidad-muestra">1 — N</b> Uno a muchos</span>
+    </div>
+  </header>
+  <div class="er-contenedor" id="er-diagrama"><div class="vacio">Cargando el modelo…</div></div>
+</section>
+
+<section class="tarjeta mb" id="diccionario">
+  <header class="tarjeta-cabecera">
+    <div><h2>Diccionario de datos</h2><p id="d-subtitulo">Elija una tabla en el diagrama o en la lista.</p></div>
+    <label class="campo-en-linea"><span class="etiqueta">Tabla</span>
+      <select class="control" id="m-tabla" aria-label="Tabla del diccionario"></select></label>
+  </header>
+  <div id="d-contenido"><div class="vacio">{{ icono('buscar') }}<strong>Sin tabla seleccionada</strong>Haga clic en una tabla del diagrama.</div></div>
+</section>
+
+<section class="tarjeta">
+  <header class="tarjeta-cabecera"><div><h2>Vistas, función, procedimientos y triggers</h2><p id="o-subtitulo">&nbsp;</p></div></header>
+  <div class="tarjeta-cuerpo" id="o-contenido"></div>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/modelo.js') }}"></script>{% endblock %}

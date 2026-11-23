@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Categorías{% endblock %}
+{% block ruta %}Inventario{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Categorías terapéuticas</h1>
+    <p>Clasificación de los medicamentos según su uso terapéutico.</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('categorias.editar') %}
+    <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nueva categoría</button>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">
+      {{ icono('buscar') }}
+      <input class="control" type="search" id="f-buscar" placeholder="Filtrar categorías">
+    </div>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th class="num">Medicamentos activos</th>
+          <th class="num">Unidades disponibles</th>
+          <th>Estado</th>
+          <th class="num">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+</section>
+
+<dialog class="modal" id="modal-categoria" aria-labelledby="titulo-categoria">
+  <form id="form-categoria" novalidate>
+    {{ modal_cabecera('Nueva categoría', '', 'titulo-categoria') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla">
+        <div class="campo ancho-total">
+          <label for="c-nombre">Nombre <span class="req">*</span></label>
+          <input id="c-nombre" name="nombre" maxlength="80" required>
+        </div>
+        <div class="campo ancho-total">
+          <label for="c-descripcion">Descripción</label>
+          <textarea id="c-descripcion" name="descripcion" maxlength="255"></textarea>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/categorias.js') }}"></script>{% endblock %}

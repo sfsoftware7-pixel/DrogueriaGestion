@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Lotes y kárdex{% endblock %}
+{% block ruta %}Inventario{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Inventario por lotes</h1>
+    <p>Existencias por lote, recepción de mercancía de proveedores y kárdex de movimientos.</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('inventario.editar') %}
+    <button class="btn btn-primario" type="button" id="btn-entrada">{{ icono('camion') }} Registrar entrada</button>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="pestanas" role="tablist">
+    <button class="pestana activa" type="button" role="tab" data-pestana="tab-lotes" aria-selected="true">{{ icono('caja') }} Existencias por lote</button>
+    <button class="pestana" type="button" role="tab" data-pestana="tab-entradas" aria-selected="false">{{ icono('documento') }} Entradas de mercancía</button>
+    <button class="pestana" type="button" role="tab" data-pestana="tab-kardex" aria-selected="false">{{ icono('kardex') }} Kárdex</button>
+  </div>
+
+  <!-- Lotes -->
+  <div id="tab-lotes" role="tabpanel">
+    <div class="filtros">
+      <div class="entrada-icono">{{ icono('buscar') }}<input class="control" type="search" id="l-buscar" placeholder="Medicamento, código o número de lote"></div>
+      <select class="control" id="l-estado" aria-label="Estado de vencimiento">
+        <option value="">Todos los estados</option>
+        <option value="VIGENTE">Vigentes (&gt; 90 días)</option>
+        <option value="PROXIMO">Próximos (31–90 días)</option>
+        <option value="CRITICO">Críticos (≤ 30 días)</option>
+        <option value="VENCIDO">Vencidos</option>
+      </select>
+      <label class="check" style="font-size:13px"><input type="checkbox" id="l-agotados"> Incluir lotes agotados</label>
+    </div>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead><tr>
+          <th>Lote</th><th>Medicamento</th><th>Proveedor</th><th>Vencimiento</th>
+          <th class="num">Inicial</th><th class="num">Actual</th><th class="num">Valor costo</th><th>Estado</th><th class="num">Acciones</th>
+        </tr></thead>
+        <tbody id="lotes-cuerpo"></tbody>
+      </table>
+    </div>
+    <div class="paginacion" id="lotes-paginacion"></div>
+  </div>
+
+  <!-- Entradas -->
+  <div id="tab-entradas" role="tabpanel" hidden>
+    <div class="filtros">
+      <div class="entrada-icono">{{ icono('buscar') }}<input class="control" type="search" id="e-buscar" placeholder="Factura o proveedor"></div>
+      <input class="control" type="date" id="e-desde" aria-label="Desde">
+      <input class="control" type="date" id="e-hasta" aria-label="Hasta">
+    </div>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead><tr>
+          <th>Factura proveedor</th><th>Fecha</th><th>Proveedor</th><th class="num">Productos</th><th class="num">Unidades</th>
+          <th class="num">Total</th><th>Registró</th><th class="num"></th>
+        </tr></thead>
+        <tbody id="entradas-cuerpo"></tbody>
+      </table>
+    </div>
+    <div class="paginacion" id="entradas-paginacion"></div>
+  </div>
+
+  <!-- Kárdex -->
+  <div id="tab-kardex" role="tabpanel" hidden>
+    <div class="filtros">
+      <div class="entrada-icono">{{ icono('buscar') }}<input class="control" type="search" id="k-buscar" placeholder="Medicamento, lote o motivo"></div>
+      <select class="control" id="k-tipo" aria-label="Tipo de movimiento">
+        <option value="">Todos los movimientos</option>
+        <option value="ENTRADA">Entradas</option>
+        <option value="VENTA">Ventas</option>
+        <option value="AJUSTE_ENTRADA">Ajustes (+)</option>
+        <option value="AJUSTE_SALIDA">Ajustes (−)</option>
+        <option value="BAJA_VENCIMIENTO">Bajas por vencimiento</option>
+        <option value="ANULACION_VENTA">Anulaciones de venta</option>
+      </select>
+      <input class="control" type="date" id="k-desde" aria-label="Desde">
+      <input class="control" type="date" id="k-hasta" aria-label="Hasta">
+    </div>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead><tr>
+          <th>Fecha</th><th>Tipo</th><th>Medicamento</th><th>Lote</th><th class="num">Cantidad</th><th class="num">Saldo lote</th><th>Motivo</th><th>Usuario</th>
+        </tr></thead>
+        <tbody id="kardex-cuerpo"></tbody>
+      </table>
+    </div>
+    <div class="paginacion" id="kardex-paginacion"></div>
+  </div>
+</section>
+
+<!-- Registrar entrada -->
+<dialog class="modal grande" id="modal-entrada" aria-labelledby="titulo-entrada" style="width:min(1100px, calc(100vw - 32px))">
+  <form id="form-entrada" novalidate>
+    {{ modal_cabecera('Registrar entrada de mercancía', 'Cada línea crea un lote nuevo o incrementa uno existente', 'titulo-entrada') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla tres">
+        <div class="campo">
+          <label for="e-proveedor">Proveedor <span class="req">*</span></label>
+          <select id="e-proveedor" name="id_proveedor" required></select>
+        </div>
+        <div class="campo">
+          <label for="e-factura">N.º factura del proveedor <span class="req">*</span></label>
+          <input id="e-factura" name="numero_factura" maxlength="40" required placeholder="FP-12345">
+        </div>
+        <div class="campo">
+          <label for="e-observaciones">Observaciones</label>
+          <input id="e-observaciones" name="observaciones" maxlength="255">
+        </div>
+      </div>
+
+      <div class="pos-buscador entrada-icono mt-2" style="position:relative">
+        {{ icono('buscar') }}
+        <input class="control" type="search" id="e-buscar-med" autocomplete="off" placeholder="Agregar medicamento: busque por nombre o código…" style="height:42px;font-size:14px;border-width:1px;padding-left:36px">
+        <div class="resultados" id="e-resultados" hidden></div>
+      </div>
+
+      <div class="tabla-contenedor mt-1">
+        <table class="tabla tabla-compacta">
+          <thead><tr>
+            <th style="min-width:200px">Medicamento</th><th>N.º lote *</th><th>Fabricación</th><th>Vencimiento *</th>
+            <th class="num">Cantidad *</th><th class="num">Costo unit. *</th><th class="num">Subtotal</th><th></th>
+          </tr></thead>
+          <tbody id="e-lineas"></tbody>
+          <tfoot><tr><td colspan="6" class="num">Total de la entrada</td><td class="num" id="e-total">$ 0</td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar-entrada">{{ icono('check') }} Registrar entrada</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- Ajuste de inventario -->
+<dialog class="modal" id="modal-ajuste" aria-labelledby="titulo-ajuste">
+  <form id="form-ajuste" novalidate>
+    {{ modal_cabecera('Ajuste de inventario', '', 'titulo-ajuste') }}
+    <div class="modal-cuerpo">
+      <input type="hidden" name="id_lote">
+      <div class="aviso mb" id="ajuste-info"></div>
+      <div class="formulario-rejilla">
+        <div class="campo">
+          <label for="a-tipo">Tipo de ajuste <span class="req">*</span></label>
+          <select id="a-tipo" name="tipo">
+            <option value="AJUSTE_SALIDA">Salida (−): avería, pérdida, faltante</option>
+            <option value="AJUSTE_ENTRADA">Entrada (+): sobrante de conteo</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="a-cantidad">Cantidad <span class="req">*</span></label>
+          <input id="a-cantidad" name="cantidad" type="number" min="1" step="1" required>
+        </div>
+        <div class="campo ancho-total">
+          <label for="a-motivo">Motivo <span class="req">*</span></label>
+          <textarea id="a-motivo" name="motivo" maxlength="255" required placeholder="Ej.: Conteo físico del 28/10: faltan 2 unidades"></textarea>
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar-ajuste">Registrar ajuste</button>
+    </footer>
+  </form>
+</dialog>
+
+<!-- Detalle de entrada -->
+<dialog class="modal grande" id="modal-detalle-entrada" aria-labelledby="titulo-detalle-entrada">
+  {{ modal_cabecera('Entrada de mercancía', '', 'titulo-detalle-entrada') }}
+  <div class="modal-cuerpo" id="detalle-entrada-cuerpo"></div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/inventario.js') }}"></script>{% endblock %}

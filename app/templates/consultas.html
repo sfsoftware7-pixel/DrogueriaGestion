@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Consultas SQL{% endblock %}
+{% block ruta %}Análisis{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Consultas SQL y plan de ejecución</h1>
+    <p>Las consultas que alimentan los reportes, el panel y el análisis ABC, con su EXPLAIN. Solo se ejecutan consultas de esta lista.</p>
+  </div>
+</div>
+
+<section class="tarjeta mb">
+  <div class="filtros" style="border-bottom:none">
+    <span class="etiqueta">Periodo de las consultas con fechas:</span>
+    <input class="control" type="date" id="c-desde" aria-label="Desde">
+    <input class="control" type="date" id="c-hasta" aria-label="Hasta">
+  </div>
+</section>
+
+<div id="grupos-consultas"></div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/consultas.js') }}"></script>{% endblock %}

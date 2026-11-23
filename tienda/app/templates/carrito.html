@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block titulo %}Carrito y pago{% endblock %}
+{% block cabeza %}
+  <script type="module" src="{{ url_for('static', filename='js/carrito.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+<section class="seccion compra" aria-labelledby="titulo-carrito">
+  <div class="wrap">
+    <div class="cabeza">
+      <h1 id="titulo-carrito">Tu carrito</h1>
+      <p class="cabeza__lado">Cambia cantidades o quita productos; abajo completas la entrega y el pago contra entrega.</p>
+    </div>
+    <div id="estado-carrito"></div>
+
+    <div class="compra__fila">
+      <div class="compra__principal">
+        <ul class="carrito-lista" id="carrito-lista" aria-busy="true" aria-label="Productos en el carrito">
+          {% for _ in range(2) %}<li class="carrito-item"><span class="esqueleto esqueleto-linea"></span><span class="esqueleto esqueleto-linea corta"></span></li>{% endfor %}
+        </ul>
+
+        <form class="form-pago" id="form-pago" novalidate hidden>
+          <div class="errores-pago" id="errores-pago" role="alert" tabindex="-1" hidden></div>
+
+          <fieldset class="grupo">
+            <legend class="grupo__titulo">Tus datos</legend>
+            <div class="campos">
+              <div class="campo">
+                <label for="tipo_documento">Tipo de documento</label>
+                <select id="tipo_documento" name="tipo_documento" required aria-describedby="error-tipo_documento">
+                  <option value="CC">Cédula de ciudadanía</option>
+                  <option value="CE">Cédula de extranjería</option>
+                  <option value="TI">Tarjeta de identidad</option>
+                  <option value="PA">Pasaporte</option>
+                  <option value="PPT">Permiso por protección temporal</option>
+                </select>
+                <p class="campo-error" id="error-tipo_documento" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="numero_documento">Número de documento</label>
+                <input id="numero_documento" name="numero_documento" inputmode="numeric" autocomplete="off" maxlength="20" required aria-describedby="error-numero_documento">
+                <p class="campo-error" id="error-numero_documento" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="nombres">Nombres</label>
+                <input id="nombres" name="nombres" autocomplete="given-name" maxlength="80" required aria-describedby="error-nombres">
+                <p class="campo-error" id="error-nombres" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="apellidos">Apellidos</label>
+                <input id="apellidos" name="apellidos" autocomplete="family-name" maxlength="80" required aria-describedby="error-apellidos">
+                <p class="campo-error" id="error-apellidos" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="email">Correo</label>
+                <input id="email" name="email" type="email" autocomplete="email" maxlength="120" required aria-describedby="error-email">
+                <p class="campo-error" id="error-email" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="telefono">Celular</label>
+                <input id="telefono" name="telefono" type="tel" autocomplete="tel" maxlength="20" required aria-describedby="error-telefono">
+                <p class="campo-error" id="error-telefono" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="grupo">
+            <legend class="grupo__titulo">Entrega</legend>
+            <div class="opciones" role="radiogroup" aria-describedby="error-tipo_entrega">
+              <label class="opcion"><input type="radio" name="tipo_entrega" value="DOMICILIO" checked> Domicilio</label>
+              <label class="opcion"><input type="radio" name="tipo_entrega" value="RETIRO"> Retiro gratis en sede</label>
+            </div>
+            <p class="campo-error" id="error-tipo_entrega" hidden></p>
+
+            <div class="campos" id="bloque-domicilio">
+              <div class="campo">
+                <label for="ciudad">Ciudad</label>
+                <select id="ciudad" name="ciudad"></select>
+              </div>
+              <div class="campo">
+                <label for="barrio">Barrio</label>
+                <div class="campo-con-boton">
+                  <input id="barrio" name="barrio" list="lista-barrios" autocomplete="off" maxlength="80" aria-describedby="cobertura error-barrio">
+                  <button class="btn btn--secondary" type="button" id="revisar-cobertura">Revisar cobertura</button>
+                </div>
+                <datalist id="lista-barrios"></datalist>
+                <p class="cobertura" id="cobertura" role="status"></p>
+                <p class="campo-error" id="error-barrio" hidden></p>
+              </div>
+              <div class="campo campo--ancho">
+                <label for="direccion">Dirección</label>
+                <input id="direccion" name="direccion" autocomplete="street-address" maxlength="150" placeholder="Calle, carrera, número" aria-describedby="error-direccion">
+                <p class="campo-error" id="error-direccion" hidden></p>
+              </div>
+              <div class="campo campo--ancho">
+                <label for="indicaciones">Indicaciones <span class="opcional">(opcional)</span></label>
+                <input id="indicaciones" name="indicaciones" maxlength="255" placeholder="Torre, apartamento, referencias">
+              </div>
+            </div>
+
+            <div class="campos" id="bloque-retiro" hidden>
+              <div class="campo campo--ancho">
+                <label for="sede">Sede</label>
+                <select id="sede" name="sede" aria-describedby="error-sede"></select>
+                <p class="campo-error" id="error-sede" hidden></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="grupo" id="grupo-formula" hidden>
+            <legend class="grupo__titulo">Fórmula médica</legend>
+            <p class="grupo__ayuda" id="formula-ayuda">Tu pedido tiene productos que requieren fórmula médica. Un farmacéutico la revisa; el pedido queda pendiente hasta aprobarla.</p>
+            <div class="campos">
+              <div class="campo campo--ancho">
+                <label for="formula">Foto o PDF de la fórmula (máx. 5 MB)</label>
+                <input id="formula" name="formula" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="formula-ayuda error-formula">
+                <p class="campo-error" id="error-formula" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="fecha_formula">Fecha de la fórmula</label>
+                <input id="fecha_formula" name="fecha_formula" type="date" aria-describedby="error-fecha_formula">
+                <p class="campo-error" id="error-fecha_formula" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="medico">Médico que la emitió <span class="opcional">(opcional)</span></label>
+                <input id="medico" name="medico" maxlength="120">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="grupo">
+            <legend class="grupo__titulo">Pago</legend>
+            <div class="opciones" aria-describedby="pago-descripcion error-metodo_pago">
+              <label class="opcion"><input type="radio" name="metodo_pago" value="" id="metodo-pago" checked> <span id="metodo-pago-nombre">Contra entrega</span></label>
+            </div>
+            <p class="grupo__ayuda" id="pago-descripcion"></p>
+            <p class="campo-error" id="error-metodo_pago" hidden></p>
+          </fieldset>
+
+          <div class="campo">
+            <label class="opcion opcion--check">
+              <input type="checkbox" name="acepta_datos" value="si" required aria-describedby="error-acepta_datos">
+              Autorizo el tratamiento de mis datos para atender y despachar este pedido (Ley 1581 de 2012).
+            </label>
+            <p class="campo-error" id="error-acepta_datos" hidden></p>
+          </div>
+          <p class="campo-error" id="error-items" hidden></p>
+
+          <button class="btn btn--primary btn--ancho" type="submit" id="confirmar-pedido">Confirmar pedido</button>
+        </form>
+      </div>
+
+      <aside class="resumen" id="resumen" aria-labelledby="titulo-resumen" hidden>
+        <h2 class="resumen__titulo" id="titulo-resumen">Resumen</h2>
+        <dl class="resumen__lista">
+          <div><dt>Subtotal</dt><dd id="resumen-subtotal">$ 0</dd></div>
+          <div><dt>Descuentos</dt><dd id="resumen-descuento">$ 0</dd></div>
+          <div><dt>Domicilio</dt><dd id="resumen-envio">Según tu barrio</dd></div>
+          <div class="resumen__total"><dt>Total</dt><dd id="resumen-total">$ 0</dd></div>
+        </dl>
+        <p class="resumen__nota">Precios con IVA incluido. Pagas al recibir.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

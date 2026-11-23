@@ -1,0 +1,99 @@
+{% from '_macros.html' import icono, enlace_nav %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block titulo %}Inicio{% endblock %} · DrogueriaGestión</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
+</head>
+<body data-permisos="{{ permisos_usuario | join(',') }}" data-rol="{{ usuario_actual.rol if usuario_actual }}">
+{% include '_iconos.html' %}
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Menú principal">
+    <div class="marca">
+      <div class="marca-logo"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""></div>
+      <div>
+        <div class="marca-nombre">DrogueriaGestión</div>
+        <div class="marca-sub">Gestión integral de droguería</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-seccion">General</div>
+      {{ enlace_nav('paginas.inicio', 'dashboard', 'Panel principal', 'inicio', pagina) }}
+
+      {% if puede('ventas.ver') or puede('clientes.ver') %}
+      <div class="nav-seccion">Ventas y dispensación</div>
+      {% if puede('ventas.crear') %}{{ enlace_nav('paginas.nueva_venta', 'pos', 'Nueva venta', 'carrito', pagina) }}{% endif %}
+      {% if puede('ventas.ver') %}{{ enlace_nav('paginas.ventas', 'ventas', 'Historial de ventas', 'recibo', pagina) }}{% endif %}
+      {% if puede('clientes.ver') %}{{ enlace_nav('paginas.clientes', 'clientes', 'Clientes', 'usuarios', pagina) }}{% endif %}
+      {% endif %}
+
+      <div class="nav-seccion">Inventario</div>
+      {{ enlace_nav('paginas.medicamentos', 'medicamentos', 'Medicamentos', 'pildora', pagina) }}
+      {{ enlace_nav('paginas.categorias', 'categorias', 'Categorías', 'etiqueta', pagina) }}
+      {% if puede('inventario.ver') %}
+      {{ enlace_nav('paginas.inventario', 'inventario', 'Lotes y kárdex', 'caja', pagina) }}
+      {{ enlace_nav('paginas.vencimientos', 'vencimientos', 'Vencimientos', 'calendario', pagina, 'contador-vencimientos') }}
+      {% endif %}
+      {% if puede('proveedores.ver') %}{{ enlace_nav('paginas.proveedores', 'proveedores', 'Proveedores', 'camion', pagina) }}{% endif %}
+
+      {% if puede('reportes.ver') or puede('analisis_abc.ver') or puede('consultas.ver') %}
+      <div class="nav-seccion">Análisis</div>
+      {% if puede('reportes.ver') %}{{ enlace_nav('paginas.reportes', 'reportes', 'Reportes', 'grafico', pagina) }}{% endif %}
+      {% if puede('analisis_abc.ver') %}{{ enlace_nav('paginas.analisis_abc', 'analisis_abc', 'Análisis ABC', 'tendencia', pagina) }}{% endif %}
+      {% if puede('consultas.ver') %}{{ enlace_nav('paginas.consultas_sql', 'consultas', 'Consultas SQL', 'documento', pagina) }}{% endif %}
+      {% endif %}
+
+      {% if puede('usuarios.administrar') or puede('modelo.ver') %}
+      <div class="nav-seccion">Administración</div>
+      {% if puede('usuarios.administrar') %}
+      {{ enlace_nav('paginas.usuarios', 'usuarios', 'Usuarios y roles', 'escudo', pagina) }}
+      {{ enlace_nav('paginas.auditoria', 'auditoria', 'Auditoría', 'historial', pagina) }}
+      {{ enlace_nav('paginas.configuracion', 'configuracion', 'Configuración', 'ajustes', pagina) }}
+      {% endif %}
+      {% if puede('modelo.ver') %}{{ enlace_nav('paginas.modelo_datos', 'modelo', 'Modelo de datos', 'llave', pagina) }}{% endif %}
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-pie">
+      <div class="avatar">{{ usuario_actual.nombres[:1] }}{{ usuario_actual.apellidos[:1] }}</div>
+      <div class="sidebar-usuario">
+        <strong>{{ usuario_actual.nombres }} {{ usuario_actual.apellidos.split(' ')[0] }}</strong>
+        <span>{{ usuario_actual.rol }}</span>
+      </div>
+      <button class="btn-icono" type="button" id="btn-salir" title="Cerrar sesión" aria-label="Cerrar sesión" style="color:#cfe5e0">{{ icono('salir') }}</button>
+    </div>
+  </aside>
+
+  <div class="principal">
+    <header class="topbar">
+      <button class="btn-icono boton-menu" type="button" id="btn-menu" aria-label="Abrir menú">{{ icono('menu') }}</button>
+      <div>
+        <div class="topbar-ruta">{% block ruta %}DrogueriaGestión{% endblock %}</div>
+        <div class="topbar-titulo">{{ self.titulo() }}</div>
+      </div>
+      <div class="topbar-acciones">
+        <span class="topbar-fecha" id="topbar-fecha"></span>
+        <button class="btn-icono" type="button" id="btn-tema" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
+          {{ icono('luna') }}
+        </button>
+        <a class="btn-icono" href="{{ url_for('paginas.perfil') }}" title="Mi perfil" aria-label="Mi perfil">{{ icono('usuario') }}</a>
+      </div>
+    </header>
+
+    <main class="contenido" id="contenido">
+      {% block contenido %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono, modal_cabecera %}
+{% block titulo %}Proveedores{% endblock %}
+{% block ruta %}Inventario{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Proveedores</h1>
+    <p>Laboratorios y distribuidores que abastecen la droguería.</p>
+  </div>
+  <div class="encabezado-acciones">
+    {% if puede('proveedores.editar') %}
+    <button class="btn btn-primario" type="button" id="btn-nuevo">{{ icono('mas') }} Nuevo proveedor</button>
+    {% endif %}
+  </div>
+</div>
+
+<section class="tarjeta">
+  <div class="filtros">
+    <div class="entrada-icono">
+      {{ icono('buscar') }}
+      <input class="control" type="search" id="f-buscar" placeholder="Buscar por razón social, NIT, contacto o ciudad">
+    </div>
+    <select class="control" id="f-activo" aria-label="Estado">
+      <option value="">Todos</option>
+      <option value="1" selected>Activos</option>
+      <option value="0">Inactivos</option>
+    </select>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Proveedor</th>
+          <th>Contacto</th>
+          <th>Ciudad</th>
+          <th class="num">Entradas</th>
+          <th>Última entrada</th>
+          <th>Estado</th>
+          <th class="num">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+
+<dialog class="modal" id="modal-proveedor" aria-labelledby="titulo-proveedor">
+  <form id="form-proveedor" novalidate>
+    {{ modal_cabecera('Nuevo proveedor', 'Los campos con * son obligatorios', 'titulo-proveedor') }}
+    <div class="modal-cuerpo">
+      <div class="formulario-rejilla">
+        <div class="campo">
+          <label for="p-nit">NIT <span class="req">*</span></label>
+          <input id="p-nit" name="nit" maxlength="20" placeholder="900123456-1" required>
+        </div>
+        <div class="campo">
+          <label for="p-ciudad">Ciudad</label>
+          <input id="p-ciudad" name="ciudad" maxlength="60" placeholder="Villavicencio">
+        </div>
+        <div class="campo ancho-total">
+          <label for="p-razon">Razón social <span class="req">*</span></label>
+          <input id="p-razon" name="razon_social" maxlength="150" required>
+        </div>
+        <div class="campo">
+          <label for="p-contacto">Nombre de contacto</label>
+          <input id="p-contacto" name="nombre_contacto" maxlength="100">
+        </div>
+        <div class="campo">
+          <label for="p-telefono">Teléfono</label>
+          <input id="p-telefono" name="telefono" maxlength="20" inputmode="tel">
+        </div>
+        <div class="campo">
+          <label for="p-email">Correo electrónico</label>
+          <input id="p-email" name="email" type="email" maxlength="120">
+        </div>
+        <div class="campo">
+          <label for="p-direccion">Dirección</label>
+          <input id="p-direccion" name="direccion" maxlength="150">
+        </div>
+      </div>
+    </div>
+    <footer class="modal-pie">
+      <button type="button" class="btn btn-secundario" data-cerrar-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primario" id="btn-guardar">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="modal grande" id="modal-detalle" aria-labelledby="titulo-detalle">
+  {{ modal_cabecera('Proveedor', '', 'titulo-detalle') }}
+  <div class="modal-cuerpo" id="detalle-cuerpo"></div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/proveedores.js') }}"></script>{% endblock %}

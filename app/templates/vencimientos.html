@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icono %}
+{% block titulo %}Vencimientos{% endblock %}
+{% block ruta %}Inventario{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Control de vencimientos</h1>
+    <p>Semáforo de lotes con existencias según su fecha de vencimiento.</p>
+  </div>
+  <div class="encabezado-acciones">
+    <button class="btn btn-secundario" type="button" id="btn-exportar">{{ icono('descargar') }} Exportar CSV</button>
+    {% if puede('inventario.editar') %}
+    <button class="btn btn-peligro" type="button" id="btn-baja">{{ icono('baja') }} Dar de baja vencidos</button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="semaforo mb" id="semaforo">
+  <button type="button" class="semaforo-item vencido" data-estado="VENCIDO">
+    <span class="titulo">{{ icono('alerta', 'icono-sm') }} Vencidos</span>
+    <div class="valor" data-valor="VENCIDO">–</div><small data-detalle="VENCIDO">&nbsp;</small>
+  </button>
+  <button type="button" class="semaforo-item critico" data-estado="CRITICO">
+    <span class="titulo">{{ icono('calendario', 'icono-sm') }} Críticos · ≤ 30 días</span>
+    <div class="valor" data-valor="CRITICO">–</div><small data-detalle="CRITICO">&nbsp;</small>
+  </button>
+  <button type="button" class="semaforo-item proximo" data-estado="PROXIMO">
+    <span class="titulo">{{ icono('calendario', 'icono-sm') }} Próximos · 31–90 días</span>
+    <div class="valor" data-valor="PROXIMO">–</div><small data-detalle="PROXIMO">&nbsp;</small>
+  </button>
+  <button type="button" class="semaforo-item vigente" data-estado="VIGENTE">
+    <span class="titulo">{{ icono('check-circulo', 'icono-sm') }} Vigentes · &gt; 90 días</span>
+    <div class="valor" data-valor="VIGENTE">–</div><small data-detalle="VIGENTE">&nbsp;</small>
+  </button>
+</div>
+
+<section class="tarjeta">
+  <header class="tarjeta-cabecera">
+    <div><h2 id="titulo-lista">Lotes vencidos y por vencer</h2><p>Haga clic en el semáforo para filtrar. Ordenado por fecha de vencimiento.</p></div>
+  </header>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead><tr>
+        <th>Medicamento</th><th>Lote</th><th>Proveedor</th><th>Vencimiento</th><th class="num">Días</th>
+        <th class="num">Existencia</th><th class="num">Valor costo</th><th>Estado</th>
+      </tr></thead>
+      <tbody id="tabla-cuerpo"></tbody>
+    </table>
+  </div>
+  <div class="paginacion" id="paginacion"></div>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/pages/vencimientos.js') }}"></script>{% endblock %}
