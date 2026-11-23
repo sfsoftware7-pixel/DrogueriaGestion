@@ -1,14 +1,18 @@
-"""API de pedidos: compra como invitado (contra entrega), detalle del pedido confirmado y consulta para seguimiento.
+"""API de pedidos: compra (como invitado o con la cuenta iniciada, contra entrega), detalle del pedido confirmado
+y consulta para seguimiento.
 
 Acceso al detalle: el código del pedido queda en la sesión (cookie firmada con SECRET_KEY) de quien lo creó o
-de quien lo consultó con el número de documento del comprador. Sin eso, el pedido no se muestra.
+de quien lo consultó con el número de documento del comprador; también lo ve el dueño del pedido con su sesión
+iniciada. Sin eso, el pedido no se muestra.
 """
 import re
 
 import pymysql
 from flask import Blueprint, current_app, jsonify, request, session, url_for
 
+from ..servicios import cuentas as servicio_cuentas
 from ..servicios import pedidos as servicio
+from .cuenta import usuario_en_sesion
 
 bp = Blueprint('api_pedidos', __name__)
 
@@ -22,7 +26,10 @@ def autorizar_en_sesion(codigo):
 
 
 def puede_ver(codigo):
-    return codigo in session.get('pedidos', [])
+    if codigo in session.get('pedidos', []):
+        return True
+    usuario = usuario_en_sesion()
+    return bool(usuario) and servicio_cuentas.pedido_es_de(codigo, usuario['id'])
 
 
 @bp.before_request
@@ -41,8 +48,9 @@ def _error_pedido(error):
 @bp.post('/pedidos')
 def crear():
     pedido = servicio.validar(request.form, request.files.get('formula'))
+    usuario = usuario_en_sesion()
     try:
-        codigo = servicio.crear(pedido)
+        codigo = servicio.crear(pedido, id_usuario_sesion=usuario['id'] if usuario else None)
     except pymysql.err.OperationalError as error:
         if error.args and error.args[0] in (1205, 1213):  # espera de bloqueo o interbloqueo con otra compra
             return jsonify({'error': 'Otra compra estaba usando estas unidades. Intenta de nuevo.'}), 409

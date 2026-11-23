@@ -49,6 +49,29 @@ def listar_categorias():
     ]
 
 
+def categoria(slug):
+    """Datos de una categoría activa para su página (sin productos), o None si no existe."""
+    fila = repo.categoria_por_slug(slug)
+    if not fila:
+        return None
+    return {
+        'id': fila['id_categoria'],
+        'nombre': fila['nombre'],
+        'slug': fila['slug'],
+        'descripcion': fila['descripcion'],
+        'padre': {'nombre': fila['padre_nombre'], 'slug': fila['padre_slug']} if fila['padre_slug'] else None,
+    }
+
+
+def detalle_categoria(slug):
+    """La categoría con sus productos (incluye los de sus subcategorías), o None si no existe."""
+    datos = categoria(slug)
+    if not datos:
+        return None
+    datos['productos'] = [_producto(f) for f in repo.productos_de_categoria(datos.pop('id'))]
+    return datos
+
+
 def listar_destacados(tipo, limite):
     filas = repo.productos_en_promocion(limite) if tipo == 'promocion' else repo.productos_destacados(limite)
     return [_producto(f) for f in filas]

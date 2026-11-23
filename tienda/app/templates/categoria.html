@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ categoria.nombre }}{% endblock %}
+{% block cabeza %}
+  <script type="module" src="{{ url_for('static', filename='js/categoria.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+<section class="seccion" aria-labelledby="titulo-categoria">
+  <div class="wrap">
+    <nav class="migas" aria-label="Estás en">
+      <ol>
+        <li><a href="{{ url_for('inicio') }}">Inicio</a></li>
+        <li><a href="{{ url_for('inicio') }}#categorias">Categorías</a></li>
+        {% if categoria.padre %}<li><a href="{{ url_for('pagina_categoria', slug=categoria.padre.slug) }}">{{ categoria.padre.nombre }}</a></li>{% endif %}
+        <li aria-current="page">{{ categoria.nombre }}</li>
+      </ol>
+    </nav>
+    <div class="cabeza">
+      <h1 id="titulo-categoria">{{ categoria.nombre }}</h1>
+      <div class="cabeza__lado">
+        {% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
+        <p class="cabeza__nota" id="total-categoria" aria-live="polite"></p>
+      </div>
+    </div>
+    <div id="estado-categoria"></div>
+    <ul class="grilla-productos" id="grilla-categoria" data-slug="{{ categoria.slug }}" aria-busy="true">
+      {% for _ in range(8) %}<li class="producto producto--esqueleto"><span class="esqueleto esqueleto-etiqueta"></span><span class="esqueleto esqueleto-linea"></span><span class="esqueleto esqueleto-linea corta"></span><span class="esqueleto esqueleto-boton"></span></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block titulo %}Mi cuenta{% endblock %}
+{% block cabeza %}
+  <script type="module" src="{{ url_for('static', filename='js/cuenta.js') }}"></script>
+{% endblock %}
+
+{% block contenido %}
+{% if cuenta %}
+<section class="seccion" aria-labelledby="titulo-cuenta">
+  <div class="wrap">
+    <div class="cabeza">
+      <h1 id="titulo-cuenta">Hola, {{ cuenta.nombres.split()[0] }}</h1>
+      <div class="cabeza__lado cuenta__acciones">
+        <p>Aquí ves tus datos y los pedidos que hiciste con esta cuenta.</p>
+        <button class="btn btn--secondary" id="boton-salir" type="button">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div class="pedido__fila">
+      <section class="recibo cuenta__datos" aria-labelledby="titulo-datos">
+        <h2 class="recibo__titulo" id="titulo-datos">Tus datos</h2>
+        <dl class="recibo__datos">
+          <div><dt>Nombre</dt><dd>{{ cuenta.nombres }} {{ cuenta.apellidos }}</dd></div>
+          <div><dt>Documento</dt><dd>{{ cuenta.tipo_documento }} {{ cuenta.numero_documento }}</dd></div>
+          <div><dt>Correo</dt><dd>{{ cuenta.email }}</dd></div>
+          <div><dt>Celular</dt><dd>{{ cuenta.telefono or 'Sin registrar' }}</dd></div>
+          <div><dt>Tipo de cuenta</dt><dd>{{ cuenta.rol }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="cuenta__pedidos" aria-labelledby="titulo-pedidos">
+        <h2 class="recibo__titulo" id="titulo-pedidos">Mis pedidos</h2>
+        {% if cuenta.pedidos %}
+        <table class="tabla-pedidos">
+          <caption class="solo-lectores">Pedidos de esta cuenta, del más reciente al más antiguo</caption>
+          <thead>
+            <tr><th scope="col">Pedido</th><th scope="col">Estado</th><th scope="col">Entrega</th><th scope="col" class="num">Total</th></tr>
+          </thead>
+          <tbody>
+            {% for p in cuenta.pedidos %}
+            <tr>
+              <td><a href="{{ url_for('pagina_pedido', codigo=p.codigo) }}">{{ p.codigo }}</a><span class="recibo__presentacion">{{ p.fecha_texto }}</span></td>
+              <td>{{ p.estado_texto }}</td>
+              <td>{{ p.entrega }}</td>
+              <td class="num">{{ p.total|pesos }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="estado"><p>Todavía no tienes pedidos con esta cuenta.</p><a class="btn btn--secondary" href="{{ url_for('inicio') }}#categorias">Ver productos</a></div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</section>
+{% else %}
+<section class="seccion consulta" aria-labelledby="titulo-cuenta">
+  <div class="wrap">
+    <div class="cabeza">
+      <h1 id="titulo-cuenta">Mi cuenta</h1>
+      <p class="cabeza__lado">Inicia sesión para ver tus datos y tus pedidos, y para comprar sin volver a escribir tus datos. ¿Compraste sin cuenta? <a href="{{ url_for('pagina_seguimiento') }}">Sigue tu pedido con el código</a>.</p>
+    </div>
+    <form class="form-pago form-consulta" id="form-sesion" novalidate>
+      <div class="errores-pago" id="error-sesion" role="alert" tabindex="-1" hidden></div>
+      <div class="campos">
+        <div class="campo campo--ancho">
+          <label for="email">Correo</label>
+          <input id="email" name="email" type="email" autocomplete="username" maxlength="120" required>
+        </div>
+        <div class="campo campo--ancho">
+          <label for="contrasena">Contraseña</label>
+          <input id="contrasena" name="contrasena" type="password" autocomplete="current-password" maxlength="128" required>
+        </div>
+      </div>
+      <button class="btn btn--primary" type="submit">Iniciar sesión</button>
+    </form>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

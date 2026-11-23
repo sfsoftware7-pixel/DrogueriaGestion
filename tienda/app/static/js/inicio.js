@@ -1,65 +1,17 @@
 /**
  * Página de inicio: banner rotativo de promociones, carrusel, carga de datos desde la API (con estados
  * de carga, vacío y error) y lista de categorías. El encabezado (menú, autocompletado, contador del carrito)
- * está en encabezado.js y las utilidades compartidas en comun.js.
+ * está en encabezado.js, las tarjetas de producto en productos.js y las utilidades compartidas en comun.js.
  * El contenido dinámico se crea con createElement/textContent (nunca innerHTML).
  * La entrada del hero, el hover y el momento de la fórmula los aportan los archivos de la skill
  * de diseño (static/vendor/taste), sin modificar.
  */
 import { obtenerJSON } from './api.js';
-import { $, agregarAlCarrito, el, flecha, mostrarError, mostrarVacio, movimientoReducido, pesos } from './comun.js';
+import { $, el, flecha, mostrarError, mostrarVacio, movimientoReducido } from './comun.js';
 import { iniciarEncabezado, menuSinCategorias, pintarMenu } from './encabezado.js';
+import { esqueletosProducto, tarjetaProducto } from './productos.js';
 
-function esqueletosProducto(cantidad) {
-  return Array.from({ length: cantidad }, () => el('li', { clase: 'producto producto--esqueleto' },
-    el('span', { clase: 'esqueleto esqueleto-etiqueta' }),
-    el('span', { clase: 'esqueleto esqueleto-linea' }),
-    el('span', { clase: 'esqueleto esqueleto-linea corta' }),
-    el('span', { clase: 'esqueleto esqueleto-boton' })));
-}
-
-/* ------------------------------------------------------------------ tarjetas de producto */
-// "Caja x 30 tabletas" -> { numero: "30", unidad: "tabletas" }; sin cantidad: { numero: "1", unidad: "unidad" }
-function cantidadDe(presentacion) {
-  const coincidencia = presentacion.match(/x\s*(\d+(?:[.,]\d+)?)\s*(.*)$/i);
-  if (coincidencia) return { numero: coincidencia[1], unidad: coincidencia[2] || '' };
-  return { numero: '1', unidad: presentacion.toLowerCase() };
-}
-
-function tarjetaProducto(producto) {
-  const enOferta = producto.precio_oferta !== null;
-  const agotado = producto.stock === 0;
-  const cantidad = cantidadDe(producto.presentacion);
-  const precios = enOferta
-    ? [
-      el('span', { clase: 'precio' },
-        el('span', { clase: 'solo-lectores', texto: 'Precio con descuento: ' }), pesos(producto.precio_oferta)),
-      el('del', { clase: 'precio-anterior' },
-        el('span', { clase: 'solo-lectores', texto: 'Precio anterior: ' }), pesos(producto.precio)),
-    ]
-    : [el('span', { clase: 'precio' }, el('span', { clase: 'solo-lectores', texto: 'Precio: ' }), pesos(producto.precio))];
-
-  return el('li', { clase: `producto${producto.requiere_formula ? ' producto--rx' : ''}` },
-    // Imagen de relleno (brief): una etiqueta tipográfica con el laboratorio, la cantidad y la categoría
-    el('div', { clase: `producto__etiqueta${enOferta ? ' producto__etiqueta--oferta' : ''}`, 'aria-hidden': 'true' },
-      el('span', { clase: 'etiqueta__lab', texto: producto.laboratorio }),
-      el('span', { clase: 'etiqueta__cantidad' }, cantidad.numero, el('span', { clase: 'etiqueta__unidad', texto: cantidad.unidad })),
-      el('span', { clase: 'etiqueta__categoria', texto: producto.categoria }),
-      enOferta ? el('span', { clase: 'producto__descuento', texto: `-${producto.descuento_porcentaje} %` }) : null),
-    el('div', { clase: 'producto__cuerpo' },
-      el('h3', { clase: 'producto__nombre', texto: producto.nombre }),
-      el('p', { clase: 'producto__presentacion', texto: producto.presentacion }),
-      el('div', { clase: 'producto__insignias' },
-        producto.requiere_formula ? el('span', { clase: 'insignia-formula', texto: 'Requiere fórmula médica' }) : null),
-      el('p', { clase: 'producto__precios' }, precios),
-      el('button', {
-        type: 'button', clase: 'btn btn--secondary',
-        'aria-label': agotado ? `${producto.nombre}: agotado` : `Agregar ${producto.nombre} al carrito`,
-        disabled: agotado,
-        onclick: () => agregarAlCarrito(producto),
-      }, agotado ? 'Agotado' : 'Agregar')));
-}
-
+/* ------------------------------------------------------------------ tarjetas de producto (productos.js) */
 async function cargarProductos({ url, lista, estado, tituloError, mensajeVacio, esqueletos }) {
   lista.setAttribute('aria-busy', 'true');
   if (lista.dataset.cargado) lista.replaceChildren(...esqueletosProducto(esqueletos));
@@ -118,7 +70,7 @@ async function cargarCategorias() {
     estado.replaceChildren();
     pintarMenu(categorias);
     lista.replaceChildren(...categorias.map((c) => el('li', {},
-      el('a', { clase: 'fila-cat', href: '#categorias', 'data-categoria': c.nombre },
+      el('a', { clase: 'fila-cat', href: `/categoria/${encodeURIComponent(c.slug)}` },
         el('span', { clase: 'fila-cat__nombre', texto: c.nombre }),
         el('span', { clase: 'fila-cat__total', texto: `${c.total_productos} ${c.total_productos === 1 ? 'producto' : 'productos'}` }),
         flecha()))));

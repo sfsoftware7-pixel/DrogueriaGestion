@@ -7,7 +7,7 @@ from ..db import consultar
 from .catalogo import _MEJOR_PROMOCION
 
 # Marca de contraseña de un cliente que compró como invitado: no es un hash Argon2 válido, así que esa
-# cuenta nunca puede iniciar sesión (no hay inicio de sesión en esta fase).
+# cuenta nunca puede iniciar sesión (servicios/cuentas.py la rechaza).
 HASH_INVITADO = '!invitado-sin-acceso'
 
 

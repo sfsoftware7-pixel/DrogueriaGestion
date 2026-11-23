@@ -4,15 +4,19 @@ import re
 import time
 
 import pymysql
-from flask import Flask, abort, g, jsonify, redirect, render_template, request, url_for
+from flask import Flask, abort, g, jsonify, redirect, render_template, request, session, url_for
 
 from . import db
+from .api.catalogo import SLUG
 from .api.catalogo import bp as api_catalogo
+from .api.cuenta import bp as api_cuenta
+from .api.cuenta import usuario_en_sesion
 from .api.pedidos import CODIGO, puede_ver
 from .api.pedidos import bp as api_pedidos
 from .api.tienda import bp as api_tienda
 from .config import Config, variables_faltantes
 from .servicios import catalogo as servicio_catalogo
+from .servicios import cuentas as servicio_cuentas
 from .servicios import pedidos as servicio_pedidos
 from .servicios import tienda_info
 
@@ -48,7 +52,8 @@ def create_app(config=Config):
 
     @app.context_processor
     def _marca():
-        return {'marca': tienda_info.datos()['drogueria']['nombre']}
+        # usuario_sesion: el encabezado muestra "Hola, <nombre>" en lugar de "Mi cuenta"
+        return {'marca': tienda_info.datos()['drogueria']['nombre'], 'usuario_sesion': usuario_en_sesion()}
 
     @app.template_filter('pesos')
     def _pesos(valor):
@@ -58,6 +63,22 @@ def create_app(config=Config):
     app.register_blueprint(api_catalogo, url_prefix='/api')
     app.register_blueprint(api_tienda, url_prefix='/api')
     app.register_blueprint(api_pedidos, url_prefix='/api')
+    app.register_blueprint(api_cuenta, url_prefix='/api')
+
+    def cuenta_actual(con_pedidos=False):
+        """Datos de quien inició sesión; si su cuenta ya no existe o está inactiva, se cierra la sesión."""
+        usuario = usuario_en_sesion()
+        if not usuario:
+            return None
+        cuenta = servicio_cuentas.datos_cuenta(usuario['id'], con_pedidos=con_pedidos)
+        if not cuenta:
+            session.clear()
+        return cuenta
+
+    def sin_cache(html):
+        respuesta = app.make_response(html)
+        respuesta.headers['Cache-Control'] = 'no-store, private'
+        return respuesta
 
     @app.get('/')
     def inicio():
@@ -69,9 +90,23 @@ def create_app(config=Config):
             banners = []
         return render_template('index.html', banners=banners)
 
+    @app.get('/categoria/<slug>')
+    def pagina_categoria(slug):
+        """Listado de una categoría: el encabezado sale del servidor y los productos de /api/categorias/<slug>."""
+        categoria = servicio_catalogo.categoria(slug) if len(slug) <= 90 and SLUG.match(slug) else None
+        if not categoria:
+            abort(404)
+        return render_template('categoria.html', categoria=categoria)
+
     @app.get('/carrito')
     def pagina_carrito():
-        return render_template('carrito.html')
+        # Con la sesión iniciada, "Tus datos" llegan llenos con los de la cuenta
+        return sin_cache(render_template('carrito.html', cuenta=cuenta_actual()))
+
+    @app.get('/cuenta')
+    def pagina_cuenta():
+        """Mi cuenta: el formulario de inicio de sesión o, con la sesión iniciada, los datos y los pedidos."""
+        return sin_cache(render_template('cuenta.html', cuenta=cuenta_actual(con_pedidos=True)))
 
     @app.get('/pedido/<codigo>')
     def pagina_pedido(codigo):

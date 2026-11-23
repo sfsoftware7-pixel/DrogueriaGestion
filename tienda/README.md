@@ -6,8 +6,12 @@ inventado para el proyecto (se buscó antes de usarlo; el registro está en `.ta
 - Un buscador con autocompletado.
 - Un banner rotativo.
 - La grilla de categorías, un carrusel de productos destacados y la sección de promociones.
-- El carrito (`/carrito`) con la compra como invitado y pago contra entrega. Antes de pagar se revisa la
-  cobertura del domicilio por barrio y, si el pedido lo necesita, se adjunta la fórmula médica.
+- Una página por categoría (`/categoria/<slug>`), que se abre desde el menú y desde la lista del inicio, con
+  sus productos (y los de sus subcategorías), el precio vigente y el botón para agregar al carrito.
+- **Mi cuenta** (`/cuenta`): inicio de sesión con correo y contraseña, los datos de la cuenta y sus pedidos.
+- El carrito (`/carrito`) con pago contra entrega, como invitado o con la cuenta iniciada (entonces «Tus datos»
+  llegan llenos y el pedido queda en Mi cuenta). Antes de pagar se revisa la cobertura del domicilio por barrio
+  y, si el pedido lo necesita, se adjunta la fórmula médica.
 - La confirmación del pedido (`/pedido/<código>`), con «Descargar recibo (PDF)», «Imprimir» y el seguimiento
   del estado. La página `/seguimiento` permite consultar el pedido con el código y el documento.
 - Un chatbot por reglas en todas las páginas (sin IA ni servicios externos) que responde sobre horarios,
@@ -20,9 +24,9 @@ horarios, las zonas de domicilio, los costos de envío y el contacto están en u
 La arquitectura completa (referentes, stack, requerimientos y modelo de datos) está en
 [`../docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md).
 
-> Datos ficticios. Este prototipo **no** incluye inicio de sesión, pasarela de pago en línea ni panel
-> administrativo (están documentados para fases posteriores). Quien compra como invitado queda guardado como
-> cliente sin contraseña, así que no puede iniciar sesión.
+> Datos ficticios. Este prototipo **no** incluye registro de cuentas nuevas, pasarela de pago en línea ni
+> panel administrativo (están documentados para fases posteriores). Quien compra como invitado queda guardado
+> como cliente sin contraseña, así que no puede iniciar sesión.
 
 ## Requisitos
 
@@ -144,6 +148,7 @@ lotes sin vencer en las sedes activas, la misma cuenta que usa el pedido al desc
 | Método | Ruta | Parámetros | Respuesta |
 |---|---|---|---|
 | GET | `/api/categorias` | — | Categorías principales activas, con el número de productos |
+| GET | `/api/categorias/<slug>` | — | Una categoría con sus productos y los de sus subcategorías (primero los que tienen existencias); `404` si no existe |
 | GET | `/api/productos/destacados` | `tipo` = `destacados` (por defecto) o `promocion`; `limite` de 1 a 24 (12 por defecto) | Productos destacados o en promoción, con `precio`, `precio_oferta`, `requiere_formula` y `stock` |
 | GET | `/api/productos/buscar` | `q` de 2 a 60 caracteres; `limite` de 1 a 10 (8 por defecto) | Sugerencias para el autocompletado. Busca por nombre (completo o incompleto, sin importar tildes ni mayúsculas), descripción (FULLTEXT) y principio activo |
 | GET | `/api/productos/disponibilidad` | `q` de 2 a 60 caracteres | Para el chatbot: la misma búsqueda, con las unidades de cada sede y sin caché |
@@ -151,12 +156,15 @@ lotes sin vencer en las sedes activas, la misma cuenta que usa el pedido al desc
 | GET | `/api/tienda` | — | Datos de `datos_tienda.toml`: horario de cada día y si está abierto ahora (hora de Colombia), zonas de domicilio, pago, contacto y sedes |
 | GET | `/api/domicilios/cobertura` | `barrio`; `ciudad` (código DANE, opcional) | Si hay domicilio al barrio, con costo y tiempo; si no, sugerencias de barrios parecidos |
 | POST | `/api/pedidos` | Formulario de pago (`multipart/form-data`, con la fórmula si aplica) | Crea el pedido y responde `201` con el código y la URL de la confirmación |
-| GET | `/api/pedidos/<código>` | — | El pedido confirmado; solo para la sesión que lo creó o lo consultó |
+| GET | `/api/pedidos/<código>` | — | El pedido confirmado; solo para la sesión que lo creó o lo consultó, o para su dueño con la sesión iniciada |
 | POST | `/api/pedidos/consulta` | `codigo`, `tipo_documento`, `numero_documento` (JSON) | Autoriza ver el pedido en esta sesión si el documento coincide |
+| POST | `/api/sesion` | `email`, `contrasena` (JSON) | Inicia sesión y responde con la URL de Mi cuenta. Datos errados: **401** con el mismo mensaje para el correo y la contraseña |
+| POST | `/api/sesion/salir` | — | Cierra la sesión |
 
 Respuestas de error:
 - Parámetros inválidos: **422**, con el detalle por campo.
 - Correo o documento de otra cuenta, o sin unidades suficientes: **409**.
+- Cinco intentos fallidos de inicio de sesión con el mismo correo en 10 minutos: **429** durante 10 minutos.
 - POST sin la cabecera `X-Requested-With: tienda` (la pone `api.js`): **403**, como protección contra envíos
   desde otros sitios.
 - Base de datos no disponible: **503**, con un mensaje genérico.
@@ -169,7 +177,8 @@ Todo ocurre en una sola transacción (`db.transaccion()`), así que se guarda co
    `datos_tienda.toml`; del navegador solo se toman los productos y las cantidades.
 2. Se bloquean los lotes de la sede (`SELECT … FOR UPDATE`) y las unidades se reparten FEFO: primero el lote que
    vence antes.
-3. Se crean o reutilizan el cliente invitado, la dirección y la fórmula. Luego se guardan el pedido
+3. Con la sesión iniciada, el pedido queda a nombre de esa cuenta; si no, se crea o reutiliza el cliente
+   invitado. Se guardan la dirección y la fórmula, y luego el pedido
    (`PED-000123`), sus productos con el precio congelado, los lotes despachados, el movimiento `VENTA` del kárdex
    y la primera línea del historial.
 4. Si algún producto requiere fórmula, el pedido queda `PENDIENTE_FORMULA` hasta que un farmacéutico la apruebe;
@@ -177,14 +186,15 @@ Todo ocurre en una sola transacción (`db.transaccion()`), así que se guarda co
 
 ## Cómo está construido
 
-- `app/api/` contiene la API: `catalogo.py`, `tienda.py` y `pedidos.py`.
+- `app/api/` contiene la API: `catalogo.py`, `tienda.py`, `pedidos.py` y `cuenta.py`.
 - `app/servicios/` contiene las reglas de negocio:
-  - `catalogo.py`: precio con la mejor promoción vigente.
+  - `catalogo.py`: precio con la mejor promoción vigente y los productos de cada categoría.
   - `pedidos.py`: validación, FEFO y datos del recibo.
+  - `cuentas.py`: inicio de sesión (Argon2id con la librería `cryptography`, límite de intentos) y datos de Mi cuenta.
   - `tienda_info.py`: lee `datos_tienda.toml`, calcula el horario en hora de Colombia y revisa la cobertura.
 - `app/repositorios/` contiene el SQL.
 - `app/templates/`:
-  - Las páginas: `index.html`, `carrito.html`, `pedido.html` y `seguimiento.html`.
+  - Las páginas: `index.html`, `categoria.html`, `carrito.html`, `cuenta.html`, `pedido.html` y `seguimiento.html`.
   - `base.html`, la base de las páginas de compra.
   - Las partes compartidas: `_encabezado.html`, `_pie.html` y `_chat.html`.
 - `app/static/` tiene los estilos y el JavaScript, sin frameworks:
@@ -196,6 +206,9 @@ Todo ocurre en una sola transacción (`db.transaccion()`), así que se guarda co
 | `js/comun.js` | Utilidades compartidas: elementos del DOM, formato de pesos, avisos y el carrito guardado en el navegador |
 | `js/encabezado.js` | Encabezado de todas las páginas: menú, buscador y contador del carrito |
 | `js/inicio.js` | Página de inicio: banner, carrusel y carga de categorías y productos |
+| `js/productos.js` | Tarjetas de producto que comparten el inicio y las páginas de categoría |
+| `js/categoria.js` | Página de una categoría: carga sus productos con estados de carga, vacío y error |
+| `js/cuenta.js` | Mi cuenta: formulario de inicio de sesión y botón para cerrarla |
 | `js/carrito.js` | Carrito y pago: cantidades, cobertura por barrio, fórmula médica y envío del pedido |
 | `js/pedido.js` y `js/recibo.js` | Confirmación: «Descargar recibo (PDF)» (jsPDF) e «Imprimir» |
 | `js/seguimiento.js` | Consulta del pedido con código y documento |
@@ -260,14 +273,20 @@ horario de cada día, el método de pago y las zonas de domicilio:
 - El usuario de MySQL lee todo, pero solo puede insertar en las tablas de una compra y actualizar existencias y
   el código del pedido.
 - Los logs no registran lo que la persona busca.
-- Un pedido solo se muestra a la sesión que lo creó o a quien lo consulta con el documento del comprador. El
-  mensaje de error es el mismo si el pedido no existe o si el documento no coincide.
+- Un pedido solo se muestra a la sesión que lo creó, a quien lo consulta con el documento del comprador o a su
+  dueño con la sesión iniciada. El mensaje de error es el mismo si el pedido no existe o si el documento no
+  coincide.
+- Inicio de sesión: la contraseña se verifica contra el hash Argon2id de MySQL; el mensaje es el mismo si el
+  correo no existe o si la contraseña está mal, y la respuesta tarda lo mismo en los dos casos. Tras 5 intentos
+  fallidos el correo se bloquea 10 minutos (contador en memoria: se reinicia con el servidor). Al iniciar y al
+  cerrar sesión se reemplaza la cookie de sesión. Las páginas de Mi cuenta y del carrito no se guardan en caché.
 - La fórmula médica se valida por su contenido (JPG, PNG o PDF de hasta 5 MB) y se guarda con su huella SHA-256.
 
 ## Usuarios de prueba
 
-`database/seed.sql` crea 3 usuarios con contraseñas hasheadas con Argon2id. El inicio de sesión no está en este
-prototipo; quedan listos para la siguiente fase.
+`database/seed.sql` crea 3 usuarios con contraseñas hasheadas con Argon2id. Con ellos se entra en **Mi cuenta**
+(`/cuenta`); la cuenta del cliente ya tiene 2 pedidos de ejemplo. Son solo para los datos de prueba: no las use
+en una instalación real.
 
 | Correo | Contraseña | Rol |
 |---|---|---|
